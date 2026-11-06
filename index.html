@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Turisto · Panel de Asesores</title>
 <meta name="theme-color" content="#4C45A4">
+<script>try { if (localStorage.getItem('turisto-tema') === 'oscuro') document.documentElement.setAttribute('data-tema', 'oscuro'); } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -13,6 +14,7 @@
     color-scheme: light;
     --noche: #F6F5FC;        /* fondo de la página: blanco con un toque lavanda */
     --tinta: #FFFFFF;        /* tarjetas */
+    --superficie: #FFFFFF;   /* fondos de botones, campos y listas */
     --tinta-2: #F8F7FE;      /* superficies dentro de tarjetas */
     --linea: #DAD5F1;
     --linea-suave: #ECE9F8;
@@ -34,10 +36,43 @@
     --r-s: 8px; --r-m: 14px; --r-l: 22px;
     --t: 180ms cubic-bezier(.2, .8, .3, 1);
   }
+  /* Modo oscuro (botón sol/luna). Morados profundos, sin negro puro; el amarillo Turisto se mantiene. */
+  :root[data-tema="oscuro"] {
+    color-scheme: dark;
+    --noche: #13102A;
+    --tinta: #1D1938;
+    --superficie: #221D42;
+    --tinta-2: #272150;
+    --linea: #3D3670;
+    --linea-suave: #2E2858;
+    --violeta: #6D64DC;
+    --violeta-2: #7D75E6;
+    --violeta-claro: #A39CF4;
+    --lavanda: #2D2757;
+    --lima: #D8E369;
+    --sobre-lima: #26240A;
+    --lima-tinta: #DDE67A;
+    --coral: #FF8370;
+    --ambar: #F2B650;
+    --menta: #4FD394;
+    --niebla: #F1EEFF;
+    --niebla-2: #C3BCEB;
+    --niebla-3: #9D96CC;
+    --sombra: 0 24px 48px -24px rgba(5, 3, 20, .7);
+    --sombra-suave: 0 1px 2px rgba(5, 3, 20, .3), 0 10px 28px -16px rgba(5, 3, 20, .6);
+  }
   * { box-sizing: border-box; }
   html { color-scheme: light; scroll-behavior: smooth; }
-  ::selection { background: color-mix(in srgb, var(--lima) 70%, #fff); color: var(--niebla); }
-  * { scrollbar-width: thin; scrollbar-color: #CFC9EE transparent; }
+  html[data-tema="oscuro"] { color-scheme: dark; }
+  html[data-tema="oscuro"] img.vista-imagen, html[data-tema="oscuro"] .comprobante img { background-color: #fff; }
+  /* Botón sol/luna: muestra a qué modo pasa */
+  .btn-tema .ico-sol { display: none; }
+  html[data-tema="oscuro"] .btn-tema .ico-sol { display: block; }
+  html[data-tema="oscuro"] .btn-tema .ico-luna { display: none; }
+  .acceso .btn-tema { position: fixed; top: 16px; right: 16px; z-index: 5; color: var(--violeta); border-color: var(--linea); background: var(--superficie); border-radius: 999px; }
+  body { transition: background-color var(--t), color var(--t); }
+  ::selection { background: color-mix(in srgb, var(--lima) 70%, var(--superficie)); color: var(--niebla); }
+  * { scrollbar-width: thin; scrollbar-color: var(--linea) transparent; }
   body {
     margin: 0; background: var(--noche); color: var(--niebla);
     font: 15px/1.5 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased;
@@ -118,7 +153,7 @@
   .barra .segmentado button { color: rgba(255, 255, 255, .82); border-radius: 999px; transition: background var(--t), color var(--t); }
   .barra .segmentado button:hover { color: #fff; background: rgba(255, 255, 255, .12); }
   .barra .segmentado button[aria-pressed="true"] { background: var(--lima); color: var(--sobre-lima); box-shadow: 0 4px 12px -6px rgba(0, 0, 0, .35); }
-  .barra .buscador input { background: #fff; border-color: transparent; border-radius: 999px; color: var(--niebla); }
+  .barra .buscador input { background: var(--superficie); border-color: transparent; border-radius: 999px; color: var(--niebla); }
   .barra .buscador input::placeholder { color: var(--niebla-3); }
   .barra .buscador input:focus { border-color: var(--lima); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lima) 55%, transparent); }
   .barra .btn-icono { color: #fff; border-color: rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .06); border-radius: 999px; }
@@ -145,7 +180,7 @@
   .nav a[aria-current="page"] { color: #fff; background: var(--violeta); font-weight: 600; box-shadow: 0 8px 18px -10px rgba(76, 69, 164, .9); transform: none; }
   .nav a[aria-current="page"] svg { opacity: 1; color: var(--lima); }
   .nav .contador-nav { margin-left: auto; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 1px 8px; background: var(--coral); color: #fff; }
-  .turno-lateral { margin-top: auto; border: 0; border-radius: var(--r-m); padding: 14px; font-size: 13px; background: linear-gradient(160deg, var(--lavanda), color-mix(in srgb, var(--lima) 22%, #fff)); }
+  .turno-lateral { margin-top: auto; border: 0; border-radius: var(--r-m); padding: 14px; font-size: 13px; background: linear-gradient(160deg, var(--lavanda), color-mix(in srgb, var(--lima) 22%, var(--superficie))); }
   .turno-lateral .estado { display: flex; align-items: center; gap: 8px; font-weight: 600; }
   .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--niebla-3); flex: none; }
   .punto.ok { background: var(--menta); box-shadow: 0 0 0 4px color-mix(in srgb, var(--menta) 18%, transparent); }
@@ -279,7 +314,7 @@
   .aviso-ruta { display: flex; gap: 14px; align-items: flex-start; border: 1px solid color-mix(in srgb, var(--ambar) 45%, var(--linea-suave)); background: color-mix(in srgb, var(--ambar) 7%, var(--tinta)); border-radius: var(--r-l); padding: 18px 20px; margin-bottom: 22px; }
   .aviso-ruta b { display: block; font-size: 15px; margin-bottom: 4px; }
   .turno-cta { display: flex; align-items: center; gap: 14px 16px; flex-wrap: wrap; margin-bottom: 22px; padding: 16px 18px; border-radius: var(--r-l);
-    background: linear-gradient(105deg, color-mix(in srgb, var(--lima) 30%, #fff), #fff 70%); border: 1px solid color-mix(in srgb, var(--lima) 70%, var(--linea)); box-shadow: var(--sombra-suave); }
+    background: linear-gradient(105deg, color-mix(in srgb, var(--lima) 30%, var(--superficie)), var(--superficie) 70%); border: 1px solid color-mix(in srgb, var(--lima) 70%, var(--linea)); box-shadow: var(--sombra-suave); }
   .turno-cta .texto { flex: 1 1 260px; min-width: 0; }
   .turno-cta b { display: block; font-size: 16px; margin-bottom: 2px; }
   .turno-cta p { color: var(--niebla-2); font-size: 14px; }
@@ -438,9 +473,9 @@
   .etiqueta-estado.bloq { color: var(--coral); }
   .etiqueta-estado.ret { color: var(--niebla-3); }
   .sello-eq { margin-left: auto; font-size: 12.5px; font-weight: 700; padding: 3px 12px; border-radius: 999px; }
-  .sello-eq.ok { background: color-mix(in srgb, var(--menta) 14%, #fff); color: var(--menta); }
-  .sello-eq.duda { background: color-mix(in srgb, var(--ambar) 16%, #fff); color: var(--ambar); }
-  .sello-eq.mal { background: color-mix(in srgb, var(--coral) 12%, #fff); color: var(--coral); }
+  .sello-eq.ok { background: color-mix(in srgb, var(--menta) 14%, var(--superficie)); color: var(--menta); }
+  .sello-eq.duda { background: color-mix(in srgb, var(--ambar) 16%, var(--superficie)); color: var(--ambar); }
+  .sello-eq.mal { background: color-mix(in srgb, var(--coral) 12%, var(--superficie)); color: var(--coral); }
   .etiqueta-estado.rol { color: var(--violeta); background: var(--lavanda); border-color: transparent; }
   .acciones-asesor { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-left: auto; }
   select.entrada.mini { width: auto; padding: 6px 28px 6px 10px; font-size: 13px; }
@@ -597,22 +632,22 @@
 
   /* ===================== ASPECTO CLARO TURISTO ===================== */
   body { background: radial-gradient(1200px 520px at 85% -10%, color-mix(in srgb, var(--lima) 16%, transparent), transparent 70%), radial-gradient(900px 600px at -10% 10%, color-mix(in srgb, var(--violeta) 9%, transparent), transparent 70%), var(--noche); background-attachment: fixed; }
-  .entrada, select.entrada, textarea.entrada { background: #fff; border-radius: 12px; }
+  .entrada, select.entrada, textarea.entrada { background: var(--superficie); border-radius: 12px; }
   .entrada:hover { border-color: color-mix(in srgb, var(--violeta) 35%, var(--linea)); }
   .entrada:focus { border-color: var(--violeta); box-shadow: 0 0 0 3px color-mix(in srgb, var(--violeta) 16%, transparent); }
   .btn { border-radius: 12px; transition: transform var(--t), box-shadow var(--t), background var(--t), border-color var(--t), filter var(--t); }
   .btn:not(.btn-sec):not(.btn-peligro):not(:disabled) { box-shadow: 0 8px 18px -10px rgba(76, 69, 164, .75); }
   .btn:hover:not(:disabled) { transform: translateY(-1px); }
   .btn:active:not(:disabled) { transform: translateY(0) scale(.98); }
-  .btn-sec { background: #fff; }
+  .btn-sec { background: var(--superficie); }
   .btn-sec:hover { border-color: var(--violeta); color: var(--violeta); background: var(--lavanda); }
   .btn-lima:not(:disabled) { box-shadow: 0 8px 18px -10px rgba(120, 130, 0, .8) !important; }
   .btn-icono { transition: background var(--t), color var(--t), border-color var(--t), transform var(--t); }
-  .chip { background: #fff; transition: background var(--t), color var(--t), border-color var(--t), transform var(--t); }
+  .chip { background: var(--superficie); transition: background var(--t), color var(--t), border-color var(--t), transform var(--t); }
   .chip:hover { border-color: var(--violeta); color: var(--violeta); }
   .chip[aria-pressed="true"] { box-shadow: 0 6px 14px -8px rgba(76, 69, 164, .8); }
   .chip[aria-pressed="true"]:hover { color: #fff; }
-  .segmentado { background: #fff; border-radius: 12px; }
+  .segmentado { background: var(--superficie); border-radius: 12px; }
   .segmentado button[aria-pressed="true"] { background: var(--violeta); color: #fff; }
 
   .cabeza h1 { color: var(--niebla); }
@@ -627,17 +662,17 @@
   .cifra:hover { transform: translateY(-3px); box-shadow: var(--sombra); }
   .cifra .num { font-size: 30px; color: var(--violeta); }
 
-  .pase { background: #fff; border-radius: 16px; box-shadow: 0 1px 2px rgba(76, 69, 164, .05); transition: border-color var(--t), transform var(--t), box-shadow var(--t), background var(--t); }
-  .pase:hover { background: #fff; border-color: color-mix(in srgb, var(--violeta) 35%, var(--linea)); transform: translateY(-2px); box-shadow: var(--sombra-suave); }
+  .pase { background: var(--superficie); border-radius: 16px; box-shadow: 0 1px 2px rgba(76, 69, 164, .05); transition: border-color var(--t), transform var(--t), box-shadow var(--t), background var(--t); }
+  .pase:hover { background: var(--superficie); border-color: color-mix(in srgb, var(--violeta) 35%, var(--linea)); transform: translateY(-2px); box-shadow: var(--sombra-suave); }
   .pase .franja { border-radius: 0 4px 4px 0; }
   .ruta-cod { color: var(--violeta); }
-  .trayecto { color: color-mix(in srgb, var(--violeta) 45%, #fff); }
-  .estado-et { background: color-mix(in srgb, currentColor 9%, #fff); border-color: color-mix(in srgb, currentColor 28%, #fff); }
+  .trayecto { color: color-mix(in srgb, var(--violeta) 45%, var(--superficie)); }
+  .estado-et { background: color-mix(in srgb, currentColor 9%, var(--superficie)); border-color: color-mix(in srgb, currentColor 28%, var(--superficie)); }
   .ruta-chip { background: var(--lavanda); color: var(--violeta); }
-  .tarjeta { background: #fff; transition: transform var(--t), box-shadow var(--t), border-color var(--t); }
+  .tarjeta { background: var(--superficie); transition: transform var(--t), box-shadow var(--t), border-color var(--t); }
   .tarjeta:hover { transform: translateY(-2px); box-shadow: var(--sombra-suave); border-color: color-mix(in srgb, var(--violeta) 35%, var(--linea)); }
   .columna-tab { background: var(--tinta-2); }
-  .vacio { background: color-mix(in srgb, #fff 70%, transparent); border-color: color-mix(in srgb, var(--violeta) 25%, var(--linea)); }
+  .vacio { background: color-mix(in srgb, var(--superficie) 70%, transparent); border-color: color-mix(in srgb, var(--violeta) 25%, var(--linea)); }
 
   .turno .reloj { color: var(--violeta); }
   .puesto { background: var(--lavanda); border-color: transparent; color: var(--violeta); }
@@ -646,27 +681,27 @@
   .orden-lista li:hover { background: var(--tinta-2); }
   .medidor { background: var(--lavanda); }
   .barra-pista i { background: linear-gradient(90deg, var(--violeta), var(--violeta-2)); transition: width 500ms cubic-bezier(.2, .8, .2, 1), filter var(--t); }
-  th { background: #FAF9FF; color: var(--niebla-2); }
-  tbody tr:hover td { background: #F7F6FE; }
-  .nav .contador-nav { box-shadow: 0 0 0 2px #fff; }
+  th { background: var(--tinta-2); color: var(--niebla-2); }
+  tbody tr:hover td { background: var(--lavanda); }
+  .nav .contador-nav { box-shadow: 0 0 0 2px var(--superficie); }
   .nav a[aria-current="page"] .contador-nav { background: var(--lima); color: var(--sobre-lima); }
 
   .cajon { border-left: 0; border-radius: var(--r-l) 0 0 var(--r-l); }
-  .cajon-cab { background: linear-gradient(180deg, var(--lavanda), #fff); border-radius: var(--r-l) 0 0 0; }
-  .pasos button { background: #fff; transition: background var(--t), color var(--t), border-color var(--t); }
+  .cajon-cab { background: linear-gradient(180deg, var(--lavanda), var(--superficie)); border-radius: var(--r-l) 0 0 0; }
+  .pasos button { background: var(--superficie); transition: background var(--t), color var(--t), border-color var(--t); }
   .pasos button:hover:not(:disabled):not([aria-pressed="true"]) { border-color: var(--violeta); color: var(--violeta); }
   .pestanas button[aria-selected="true"] { color: var(--violeta); border-bottom-color: var(--violeta); }
   .modal .caja { border: 0; animation: aparecer 220ms cubic-bezier(.2, .8, .2, 1) both; }
-  .aviso { background: #fff; border-color: var(--linea-suave); }
-  .fab { box-shadow: 0 14px 30px -12px rgba(110, 120, 0, .7), 0 0 0 4px rgba(255, 255, 255, .9); transition: transform var(--t), box-shadow var(--t); }
+  .aviso { background: var(--superficie); border-color: var(--linea-suave); }
+  .fab { box-shadow: 0 14px 30px -12px rgba(110, 120, 0, .7), 0 0 0 4px var(--superficie); transition: transform var(--t), box-shadow var(--t); }
   .fab:hover { transform: translateY(-2px); filter: none; }
   .asistente { border: 0; }
   .asis-cab { background: linear-gradient(105deg, #433C98, var(--violeta)); color: #fff; border-radius: var(--r-l) var(--r-l) 0 0; border-bottom: 0; }
   .asis-cab .muy-tenue { color: rgba(255, 255, 255, .78) !important; }
   .asis-cab .btn-icono { color: #fff; border-color: rgba(255, 255, 255, .3); }
   .msg.bot { background: var(--lavanda); border-color: transparent; }
-  .msg .ficha { background: #fff; }
-  .nav-inferior { background: color-mix(in srgb, #fff 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-top-color: var(--linea-suave); }
+  .msg .ficha { background: var(--superficie); }
+  .nav-inferior { background: color-mix(in srgb, var(--superficie) 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-top-color: var(--linea-suave); }
   .nav-inferior [aria-current="page"] { color: var(--violeta); background: var(--lavanda); }
 
   body.sin-sesion .acceso { background: radial-gradient(900px 500px at 80% 0%, color-mix(in srgb, var(--lima) 22%, transparent), transparent 70%), radial-gradient(800px 600px at 0% 100%, color-mix(in srgb, var(--violeta) 14%, transparent), transparent 70%), var(--noche); }
@@ -683,6 +718,11 @@
   .vista.entrando > *:nth-child(n+4) { animation-delay: 120ms; }
   @keyframes subir { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @keyframes aparecer { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+  .seguimiento-fila { grid-template-columns: 76px minmax(0, 1fr) auto; }
+  .seguimiento-hora { font: 700 18px 'Space Grotesk', sans-serif; display: flex; flex-direction: column; line-height: 1.1; }
+  .seguimiento-hora small { font: 600 12px 'Inter', sans-serif; color: var(--niebla-2); }
+  .seguimiento-hora.vencido { color: var(--coral); }
+  @media (max-width: 420px) { .seguimiento-fila { grid-template-columns: 64px minmax(0, 1fr); } .seguimiento-fila .acc { grid-column: 1 / -1; } }
   .grupo-pausa + .grupo-pausa { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--linea-suave); }
   .acciones-pausa { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .lista-pausa { list-style: none; margin: 2px 0 0 22px; padding: 0; font-size: 13px; color: var(--niebla-2); }
@@ -712,6 +752,7 @@
     <div class="usuario">
       <div class="quien"><b id="usuarioNombre"></b><span id="usuarioRol"></span></div>
       <div class="avatar" id="usuarioAvatar" aria-hidden="true"></div>
+      <button type="button" class="btn-icono btn-tema" data-accion="tema" aria-pressed="false" aria-label="Activar modo oscuro" title="Modo oscuro"><svg class="ico-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="ico-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
       <button type="button" class="btn-icono" data-accion="salir" aria-label="Salir del panel" title="Salir">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg>
       </button>
@@ -779,6 +820,43 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const MIN = 60000, HORA = 60 * MIN, DIA = 24 * HORA;
+  // ---- Modo claro / oscuro (se recuerda en este navegador) ----
+  // Ctrl+V con una imagen copiada (por ejemplo una captura de WhatsApp Web):
+  //  · con el reporte de erróneo abierto, va al campo de la captura;
+  //  · con un lead abierto que pide comprobante, se sube como comprobante.
+  document.addEventListener('paste', (e) => {
+    const items = (e.clipboardData && e.clipboardData.items) ? [...e.clipboardData.items] : [];
+    const item = items.find(it => it.kind === 'file' && /^image\//.test(it.type));
+    const archivo = item && item.getAsFile(); if (!archivo) return;
+    const nombre = archivo.name && archivo.name !== 'image.png' ? archivo.name : 'captura-pegada.png';
+    const pegado = new File([archivo], nombre, { type: archivo.type || 'image/png' });
+    const campo = $('#modal.abierto input[type=file][name=captura]');
+    if (campo) {
+      e.preventDefault();
+      try {
+        const dt = new DataTransfer(); dt.items.add(pegado); campo.files = dt.files;
+        campo.dispatchEvent(new Event('change', { bubbles: true }));
+        avisar('Captura pegada.');
+      } catch (er) { avisar('Este navegador no deja pegar aquí. Elige la captura con el botón.', 'err'); }
+      return;
+    }
+    if (!$('#modal').classList.contains('abierto') && leadAbierto && $('#zonaArchivos')) { e.preventDefault(); agregarArchivos([pegado]); }
+  });
+  const BOTON_TEMA = "<button type=\"button\" class=\"btn-icono btn-tema\" data-accion=\"tema\" aria-pressed=\"false\" aria-label=\"Activar modo oscuro\" title=\"Modo oscuro\"><svg class=\"ico-luna\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z\"/></svg><svg class=\"ico-sol\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg></button>";
+  function aplicarTema(tema, guardar) {
+    const oscuro = tema === 'oscuro';
+    if (oscuro) document.documentElement.setAttribute('data-tema', 'oscuro'); else document.documentElement.removeAttribute('data-tema');
+    const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', oscuro ? '#13102A' : '#4C45A4');
+    document.querySelectorAll('.btn-tema').forEach(b => {
+      b.setAttribute('aria-pressed', String(oscuro));
+      b.setAttribute('aria-label', oscuro ? 'Volver al modo claro' : 'Activar modo oscuro');
+      b.title = oscuro ? 'Modo claro' : 'Modo oscuro';
+    });
+    if (guardar) { try { localStorage.setItem('turisto-tema', oscuro ? 'oscuro' : 'claro'); } catch (e) {} }
+  }
+  // El botón de la entrada se crea después: se sincroniza al pintarse.
+  new MutationObserver(() => aplicarTema(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro')).observe(document.getElementById('acceso') || document.body, { childList: true });
+  document.addEventListener('DOMContentLoaded', () => aplicarTema(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro'));
   const ZONA = 'America/Caracas';
   const fmtHora = (ts) => new Date(ts).toLocaleTimeString('es-VE', { timeZone: ZONA, hour: '2-digit', minute: '2-digit', hour12: false });
   const fmtDia = (ts) => new Date(ts).toLocaleDateString('es-VE', { timeZone: ZONA, day: 'numeric', month: 'short' });
@@ -818,7 +896,7 @@
   const ORDEN = { nuevo: 0, contactado: 1, cotizado: 2, seguimiento: 3, cerrado: 4 };
   const RUTAS = { VENEZUELA: 'Venezuela', ARGENTINA: 'Argentina', ARGVZLA: 'Arg / Vzla' };
   const MOTIVOS_LE = {
-    numero_invalido: 'El número no existe o no tiene WhatsApp', no_solicito: 'Dice que no pidió información',
+    numero_invalido: 'El número no existe o no tiene WhatsApp', no_solicito: 'Dice que no pidió información o que ya no le interesa',
     duplicado: 'Repetido o ya era cliente', otra_ruta: 'Es de otra ruta o país', datos_falsos: 'Datos falsos o de prueba', otro: 'Otro motivo'
   };
   const TIPOS_DOC = ['Comprobante de contacto', 'Cotización', 'Pasaporte o documento', 'Comprobante de pago', 'Otro'];
@@ -915,7 +993,8 @@
       asignado: f.hora_asignacion ? new Date(f.hora_asignacion).getTime() : Date.parse((f.fecha || hoyClave()) + 'T16:00:00Z'),
       contactadoEn: f.contactado_en ? new Date(f.contactado_en).getTime() : null,
       comprobante: !!(f.tiene_comprobante || f.foto_contacto_url), fecha: f.fecha,
-      fuente: 'reparto', validacion: null, actividad: [], docs: [], proxima: null, venta: null, perdida: null
+      fuente: 'reparto', validacion: null, actividad: [], docs: [], venta: null, perdida: null,
+      proxima: f.seguimiento_en ? { ts: new Date(f.seguimiento_en).getTime(), accion: f.seguimiento_nota || 'Hacer seguimiento' } : null
     };
   }
   function reporteDesdeFila(f) {
@@ -1053,8 +1132,10 @@
   const datosVacios = () => ({ usuarios: [], leads: [], reportes: [], ajustes: { activo: true, limiteDiario: 3, exigirCaptura: true, verificacionIA: 'apagada', modoLE: 'fijo', cupoDiario: null } });
   datos = datosVacios();
   function guardar() { /* en la versión conectada todo se guarda en Supabase al momento */ }
+  let haySeguimiento = false;       // la base ya tiene leads.seguimiento_en (SQL 07)
 
-  const COLUMNAS_LEADS = ['id, cliente, fecha, hora_asignacion, estado, asesor_id, ruta, tiene_comprobante, contactado_en',
+  const COLUMNAS_LEADS = ['id, cliente, fecha, hora_asignacion, estado, asesor_id, ruta, tiene_comprobante, contactado_en, seguimiento_en, seguimiento_nota',
+    'id, cliente, fecha, hora_asignacion, estado, asesor_id, ruta, tiene_comprobante, contactado_en',
     'id, cliente, fecha, hora_asignacion, estado, asesor_id, ruta, contactado_en'];
   async function cargarDatos() {
     const hoy = hoyClave(), desde = fechaConDesfase(-(DIAS_CARGADOS - 1));
@@ -1089,10 +1170,22 @@
           if (!veTodoAhora) q = q.eq('asesor_id', miId);
           return q;
         });
+        haySeguimiento = col.includes('seguimiento_en');
         break;
       } catch (e) { ultimoError = e; }
     }
     if (!filasLeads) throw ultimoError;
+    // Leads más viejos que tienen un seguimiento pendiente (un seguimiento puede ser para dentro de semanas).
+    if (haySeguimiento) {
+      try {
+        let q = sb.from('leads').select(COLUMNAS_LEADS[0]).lt('fecha', desde).not('seguimiento_en', 'is', null).in('ruta', rutasConsulta).order('id', { ascending: false }).limit(500);
+        if (!veTodoAhora) q = q.eq('asesor_id', miId);
+        const { data, error } = await q;
+        if (error) throw error;
+        const ya = new Set(filasLeads.map(f => f.id));
+        (data || []).forEach(f => { if (!ya.has(f.id)) filasLeads.push(f); });
+      } catch (e) { console.warn('seguimientos viejos', e); }
+    }
 
     // Reportes de leads erróneos
     const IA = ', veredicto_ia, explicacion_ia';
@@ -1347,6 +1440,7 @@
     const s = [
       { id: 'inicio', nombre: 'Inicio' },
       { id: 'leads', nombre: rol === 'asesor' ? 'Mis leads' : 'Leads' },
+      { id: 'agenda', nombre: 'Seguimiento' },
       { id: 'erroneos', nombre: 'Leads erróneos' },
       { grupo: 'Equipo', solo: ['asignador', 'supervisor'] },
       { id: 'asesores', nombre: 'Asesores y rutas', solo: ['asignador'] },
@@ -1363,6 +1457,7 @@
   function contadorNav(id) {
     if (id === 'erroneos' && veTodo()) return datos.reportes.filter(porRevisar).length;
     if (id === 'asesores') return sinRuta().length;
+    if (id === 'agenda') return seguimientosPendientes().filter(l => l.proxima.ts <= finDeHoy()).length;
     return 0;
   }
 
@@ -1372,7 +1467,7 @@
       ? '<div class="nav-grupo">' + esc(s.grupo) + '</div>'
       : '<a href="#/' + s.id + '"' + (s.id === actual ? ' aria-current="page"' : '') + '>' + icono(s.id) + esc(s.nombre) +
         (contadorNav(s.id) ? '<span class="contador-nav" aria-label="' + contadorNav(s.id) + ' pendientes">' + contadorNav(s.id) + '</span>' : '') + '</a>').join('');
-    const rapidas = rol === 'asesor' ? ['inicio', 'leads', 'erroneos'] : ['inicio', 'leads', 'erroneos', 'equipo'];
+    const rapidas = rol === 'asesor' ? ['inicio', 'leads', 'agenda', 'erroneos'] : ['inicio', 'leads', 'erroneos', 'equipo'];
     suave($('#navInferior')).innerHTML = rapidas.map(id => {
       const s = secciones().find(x => x.id === id);
       return '<a href="#/' + id + '"' + (id === actual ? ' aria-current="page"' : '') + '>' + icono(id) + esc(s.nombre.replace('Mis leads', 'Leads').replace('Leads erróneos', 'Erróneos').replace('Turnos y cupos', 'Equipo')) + '</a>';
@@ -1738,24 +1833,75 @@
   };
 
   // ---------------- AGENDA ----------------
+  // Leads con seguimiento pendiente que ve esta persona (los suyos; la asignadora y la supervisora, los de todos).
+  const seguimientosPendientes = () => leadsVisibles().filter(l => l.proxima && !['cerrado', 'perdido', 'erroneo'].includes(l.estado)).sort((a, b) => a.proxima.ts - b.proxima.ts);
+  const finDeHoy = () => Date.parse(hoyClave() + 'T23:59:59-04:00');
   VISTAS.agenda = function () {
     const ahora = Date.now();
-    const con = leadsVisibles().filter(l => l.proxima && !['cerrado', 'perdido', 'erroneo'].includes(l.estado)).sort((a, b) => a.proxima.ts - b.proxima.ts);
+    const con = seguimientosPendientes();
     const grupos = [
       ['Vencidos', con.filter(l => l.proxima.ts < ahora)],
       ['Hoy', con.filter(l => l.proxima.ts >= ahora && esHoy(l.proxima.ts))],
       ['Próximos días', con.filter(l => l.proxima.ts >= ahora && !esHoy(l.proxima.ts))]
     ];
-    return '<div class="cabeza"><div><h1>Agenda</h1><p class="sub">Los seguimientos que programaste al registrar una gestión. Márcalos como hechos o pásalos a mañana.</p></div></div>' +
-      (con.length ? grupos.filter(g => g[1].length).map(g => '<section class="bloque" style="margin-bottom:16px" aria-label="' + g[0] + '"><header><h2>' + g[0] + '</h2><span class="num muy-tenue">' + g[1].length + '</span></header>' +
-        g[1].map(l => '<div class="doc" style="grid-template-columns:72px minmax(0,1fr) auto">' +
-          '<span class="num" style="font:700 18px Space Grotesk;' + (l.proxima.ts < ahora ? 'color:var(--coral)' : '') + '">' + (esHoy(l.proxima.ts) ? fmtHora(l.proxima.ts) : fmtDia(l.proxima.ts)) + '</span>' +
-          '<span><b>' + esc(l.proxima.accion) + '</b><small>' + esc(codigo(l.origen) + ' a ' + codigo(l.destino)) + ' · ' + esc(l.cliente) + '</small></span>' +
+    const cabeza = '<div class="cabeza"><div><h1>Seguimiento</h1><p class="sub">' + (veTodo() ? 'Los leads que el equipo marcó para volver a escribirles, con la hora.' : 'Los leads que marcaste para volver a escribirles. Cuando llegue la hora te avisamos aquí.') + ' Hora de Caracas.</p></div></div>';
+    if (!haySeguimiento) return cabeza + vacioHtml('El seguimiento todavía no está activado', 'Falta correr en Supabase el SQL 07 (seguimiento). Avísale a tu asignadora.');
+    return cabeza + (con.length ? grupos.filter(g => g[1].length).map(g => '<section class="bloque" style="margin-bottom:16px" aria-label="' + g[0] + '"><header><h2>' + g[0] + '</h2><span class="num muy-tenue">' + g[1].length + '</span></header>' +
+        g[1].map(l => '<div class="doc seguimiento-fila">' +
+          '<span class="num seguimiento-hora' + (l.proxima.ts < ahora ? ' vencido' : '') + '">' + (esHoy(l.proxima.ts) ? fmtHora(l.proxima.ts) : fmtDia(l.proxima.ts) + '<small>' + fmtHora(l.proxima.ts) + '</small>') + '</span>' +
+          '<span><b>' + esc(l.cliente) + '</b><small>' + esc(l.proxima.accion) + ' · ' + esc(codigo(l.origen) + ' a ' + codigo(l.destino)) + (veTodo() ? ' · ' + esc(usuario(l.asesorId).nombre) : '') + '</small></span>' +
           '<span class="acc"><button type="button" class="btn btn-sec btn-chico" data-accion="abrir-lead" data-id="' + l.id + '">Abrir</button>' +
-          '<button type="button" class="btn btn-sec btn-chico" data-accion="posponer" data-id="' + l.id + '">A mañana</button>' +
-          '<button type="button" class="btn btn-chico" data-accion="hecho" data-id="' + l.id + '">Hecho</button></span></div>').join('') + '</section>').join('')
-        : vacioHtml('No tienes seguimientos programados', 'Al registrar una gestión en un lead puedes dejar la próxima acción con fecha y hora.', '<a class="btn" href="#/leads">Ir a mis leads</a>'));
+          (puedeEditar(l) ? '<button type="button" class="btn btn-sec btn-chico" data-accion="posponer" data-id="' + l.id + '">A mañana</button>' +
+          '<button type="button" class="btn btn-chico" data-accion="hecho" data-id="' + l.id + '">Hecho</button>' : '') + '</span></div>').join('') + '</section>').join('')
+        : vacioHtml(veTodo() ? 'Nadie tiene seguimientos programados' : 'No tienes seguimientos programados', 'Abre un lead ya contactado y toca “Programar seguimiento” para elegir el día y la hora.', '<a class="btn" href="#/leads">Ir a ' + (rol === 'asesor' ? 'mis leads' : 'los leads') + '</a>'));
   };
+
+  // ---- Programar, mover y quitar un seguimiento (leads.seguimiento_en / seguimiento_nota) ----
+  async function guardarSeguimiento(l, ts, nota) {
+    const cambios = { seguimiento_en: ts ? new Date(ts).toISOString() : null, seguimiento_nota: ts ? (nota || null) : null };
+    const { data, error } = await sb.from('leads').update(cambios).eq('id', l.id).select('id');
+    if (error) throw error;
+    if (!data || !data.length) throw new Error(rol === 'asignador' ? 'Supabase no dejó guardarlo: falta correr el SQL 07.' : 'Supabase no dejó guardarlo: el lead no es tuyo.');
+    l.proxima = ts ? { ts, accion: nota || 'Hacer seguimiento' } : null;
+    seguimientosAvisados.delete(l.id);
+    recargar();
+  }
+  // La hora se escribe en hora de Caracas, como todo el panel.
+  const partesCaracas = (ts) => { const p = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(ts));
+    const v = (t) => (p.find(x => x.type === t) || {}).value; return { dia: v('year') + '-' + v('month') + '-' + v('day'), hora: (v('hour') === '24' ? '00' : v('hour')) + ':' + v('minute') }; };
+  function modalSeguimiento(l) {
+    const base = l.proxima ? l.proxima.ts : Math.ceil((Date.now() + 60 * MIN) / (15 * MIN)) * 15 * MIN;
+    const p = partesCaracas(base);
+    abrirModal('<form class="formulario" novalidate><h2 id="modalTitulo">' + (l.proxima ? 'Cambiar el seguimiento' : 'Programar seguimiento') + '</h2>' +
+      '<p>' + esc(l.cliente) + ' · ' + esc(codigo(l.origen) + ' a ' + codigo(l.destino)) + '</p>' +
+      '<div class="dos"><label class="campo"><span>Día</span><input class="entrada" name="dia" type="date" required min="' + hoyClave() + '" value="' + p.dia + '"></label>' +
+      '<label class="campo"><span>Hora (de Caracas)</span><input class="entrada" name="hora" type="time" step="300" required value="' + p.hora + '"></label></div>' +
+      '<label class="campo"><span>Qué vas a hacer (opcional)</span><input class="entrada" name="nota" maxlength="200" autocomplete="off" placeholder="Ej.: mandarle la cotización con equipaje" value="' + esc(l.proxima && l.proxima.accion !== 'Hacer seguimiento' ? l.proxima.accion : '') + '"></label>' +
+      '<p class="ayuda">Te avisamos en el panel cuando llegue la hora. El lead sale en la sección Seguimiento.</p>' +
+      '<p class="error-campo oculto" role="alert"></p>' + botonesModal(l.proxima ? 'Guardar cambios' : 'Programar') + '</form>', async (form) => {
+      const dia = form.dia.value, hora = form.hora.value;
+      if (!/^\d{4}-\d\d-\d\d$/.test(dia)) return marcarError(form, 'dia', 'Elige el día.');
+      if (!/^\d\d:\d\d$/.test(hora)) return marcarError(form, 'hora', 'Elige la hora.');
+      const ts = Date.parse(dia + 'T' + hora + ':00-04:00');
+      if (!ts || ts < Date.now() - MIN) return marcarError(form, 'hora', 'Esa hora ya pasó. Elige una hora que todavía no haya llegado.');
+      if (ts > Date.now() + 180 * DIA) return marcarError(form, 'dia', 'Elige un día dentro de los próximos 6 meses.');
+      await guardarSeguimiento(l, ts, form.nota.value.trim().slice(0, 200));
+      avisar('Seguimiento programado para el ' + (esHoy(ts) ? 'hoy' : fmtDia(ts)) + ' a las ' + fmtHora(ts) + '.');
+    });
+  }
+  // Aviso cuando llega la hora de un seguimiento propio (mientras el panel está abierto).
+  const seguimientosAvisados = new Set();
+  function revisarSeguimientos() {
+    if (!miId || !haySeguimiento) return;
+    const ahora = Date.now();
+    const llegan = datos.leads.filter(l => l.asesorId === miId && l.proxima && l.proxima.ts <= ahora && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) && !seguimientosAvisados.has(l.id));
+    if (!llegan.length) return;
+    llegan.forEach(l => seguimientosAvisados.add(l.id));
+    pitido();
+    avisar(llegan.length === 1 ? 'Toca hacer seguimiento a ' + llegan[0].cliente + ': ' + llegan[0].proxima.accion + '.' : 'Tienes ' + llegan.length + ' seguimientos por hacer. Están en Seguimiento.');
+    try { if (window.Notification && Notification.permission === 'granted') new Notification('Turisto · seguimiento', { body: llegan.map(l => l.cliente).join(', ') }); } catch (e) {}
+    if (seccionActual() !== 'agenda' || !$('#modal').classList.contains('abierto')) pintarNavegacion();
+  }
 
   // ---------------- DOCUMENTOS ----------------
   const filtrosDocs = { tipo: '' };
@@ -1988,75 +2134,8 @@
             '<td class="num"' + (sc ? ' style="color:var(--coral);font-weight:700"' : '') + '>' + sc + '</td><td class="num">' + c.usados + ' de ' + c.limite + '</td>' +
             (rol === 'asignador' ? '<td>' + (enEste ? '<button type="button" class="btn btn-sec btn-chico" data-accion="sacar-turno" data-id="' + a.id + '">Sacar del turno</button>' : '') + '</td>' : '') + '</tr>';
         }).join('') + '</tbody></table></div>'
-        : vacioHtml('Nadie registrado en el turno ' + filtrosEquipo.turno + ' hoy', 'Los asesores se registran desde su Inicio.')) +
-      equidadHtml(filtrosEquipo.turno);
+        : vacioHtml('Nadie registrado en el turno ' + filtrosEquipo.turno + ' hoy', 'Los asesores se registran desde su Inicio.'));
   };
-
-  // ---------------- EQUIDAD DEL REPARTO ----------------
-  // Repite el reparto de hoy lead por lead (en orden de asignación) y, en cada uno, mira si había alguien
-  // registrado en ese turno y ruta que llevaba MENOS leads que quien lo recibió. Eso es un "salto".
-  // Se cuenta por ruta, como lo cuenta cada hoja. (En Colombia los leads de China van aparte; en VE/AR no hay ese grupo.)
-  const esLeadChina = () => false;
-  const turnoDeHora = (ts) => { const p = new Intl.DateTimeFormat('en-GB', { timeZone: ZONA, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(ts));
-    const m = (Number((p.find(x => x.type === 'hour') || {}).value) % 24) * 60 + Number((p.find(x => x.type === 'minute') || {}).value); return m < 17 * 60 + 30 ? 'AM' : 'PM'; };
-  function auditarEquidad(ruta, turno) {
-    const o = ordenHoja[ruta] || {};
-    const cupo = o.cupo || 10;
-    const sinCupo = o.sinCupo || [];
-    const registrados = datos.usuarios.map(u => {
-      const reg = u.registros.find(x => x.ruta === ruta && x.turno === turno);
-      return reg ? { u, desde: reg.creado_en ? Date.parse(reg.creado_en) : 0 } : null;
-    }).filter(Boolean);
-    const leads = datos.leads.filter(l => l.ruta === ruta && esHoy(l.asignado) && l.asesorId).sort((a, b) => a.asignado - b.asignado);
-    const cuenta = {}, saltos = {}, ultimoSalto = {}, enTurno = {};
-    let china = 0;
-    for (const l of leads) {
-      const delTurno = turnoDeHora(l.asignado) === turno;
-      if (delTurno && esLeadChina(l)) { china++; }
-      else if (delTurno) {
-        const recibe = cuenta[l.asesorId] || 0;
-        registrados.forEach(r => {
-          if (r.u.id === l.asesorId || r.desde > l.asignado) return;
-          if (sinCupo.includes(normNombre(r.u.nombre))) return;
-          const lleva = cuenta[r.u.id] || 0;
-          if (lleva < recibe && lleva < cupo) { saltos[r.u.id] = (saltos[r.u.id] || 0) + 1; ultimoSalto[r.u.id] = l.asignado; }
-        });
-      }
-      cuenta[l.asesorId] = (cuenta[l.asesorId] || 0) + 1;
-      if (delTurno) enTurno[l.asesorId] = (enTurno[l.asesorId] || 0) + 1;
-    }
-    const filas = registrados.map(r => ({ u: r.u, desde: r.desde, hoy: cuenta[r.u.id] || 0, turno: enTurno[r.u.id] || 0, saltos: saltos[r.u.id] || 0, ultimo: ultimoSalto[r.u.id] || null,
-      lleno: sinCupo.includes(normNombre(r.u.nombre)) }))
-      .sort((a, b) => a.hoy - b.hoy || a.desde - b.desde);
-    // Diferencia entre quien más y quien menos lleva hoy (sin contar a quien ya completó su cupo)
-    const activos = filas.filter(f => !f.lleno);
-    const dif = activos.length ? Math.max(...activos.map(f => f.hoy)) - Math.min(...activos.map(f => f.hoy)) : 0;
-    // Recibieron leads sin estar registrados en este turno (asignación a mano, China u otra hoja)
-    const fuera = Object.keys(enTurno).filter(id => !registrados.some(r => r.u.id === id)).map(id => ({ u: usuario(id), n: enTurno[id] }));
-    return { filas, dif, fuera, china, totalSaltos: Object.values(saltos).reduce((s, x) => s + x, 0) };
-  }
-  function equidadHtml(turno) {
-    if (!veTodo()) return '';
-    const rutas = rutaFiltro === 'TODAS' ? Object.keys(RUTAS) : [rutaFiltro];
-    const bloques = rutas.map(r => {
-      const a = auditarEquidad(r, turno);
-      if (!a.filas.length) return '';
-      const nivel = a.totalSaltos === 0 && a.dif <= 1 ? ['ok', 'Parejo'] : a.dif <= 2 && a.totalSaltos <= 2 ? ['duda', 'Revisar'] : ['mal', 'Desparejo'];
-      return '<section class="bloque equidad" aria-labelledby="eq-' + r + '" style="margin-top:18px"><header><h2 id="eq-' + r + '">Equidad del reparto · ' + esc(RUTAS[r]) + ' · turno ' + turno + '</h2>' +
-        '<span class="sello-eq ' + nivel[0] + '">' + nivel[1] + '</span></header>' +
-        '<p class="bloque-desc">Diferencia de leads hoy entre quien más y quien menos lleva: <b class="num">' + a.dif + '</b>. ' +
-        (a.totalSaltos ? '<b>' + a.totalSaltos + (a.totalSaltos === 1 ? ' salto' : ' saltos') + '</b>: un lead se le dio a alguien que ya llevaba más que otro registrado.' : 'Ningún salto: cada lead fue a quien menos llevaba.') + '</p>' +
-        '<div class="tabla-marco"><table><caption class="sr">Equidad del reparto de ' + esc(RUTAS[r]) + '</caption><thead><tr><th>Asesor</th><th>Registrado</th><th class="num">Leads del turno</th><th class="num">Leads hoy</th><th class="num">Saltado</th></tr></thead><tbody>' +
-        a.filas.map(f => '<tr><td>' + esc(f.u.nombre) + (f.lleno ? ' <span class="etiqueta-estado ret">Cupo completo</span>' : '') + '</td>' +
-          '<td>' + (f.desde ? fmtHora(f.desde) : '—') + '</td><td class="num">' + f.turno + '</td><td class="num">' + f.hoy + '</td>' +
-          '<td class="num"' + (f.saltos ? ' style="color:var(--coral);font-weight:700"' : '') + '>' + (f.saltos ? f.saltos + (f.ultimo ? ' <span class="muy-tenue" style="font-weight:400">(último ' + fmtHora(f.ultimo) + ')</span>' : '') : '0') + '</td></tr>').join('') +
-        '</tbody></table></div>' +
-        (a.fuera.length ? '<p class="ayuda" style="margin-top:10px">Recibieron leads sin estar registrados en este turno: ' + esc(a.fuera.map(x => x.u.nombre + ' (' + x.n + ')').join(', ')) + '. Suele ser una asignación a mano.</p>' : '') +
-        (a.china ? '<p class="ayuda" style="margin-top:6px">' + a.china + (a.china === 1 ? ' lead de China fue' : ' leads de China fueron') + ' a su grupo y no se cuentan como salto.</p>' : '') +
-        '<p class="ayuda" style="margin-top:6px">Se calcula con los leads del panel. Un salto puede ser normal si esa persona completó su cupo en la hoja o se registró tarde.</p></section>';
-    }).join('');
-    return bloques;
-  }
 
   // ---------------- ESTADÍSTICAS ----------------
   // Hoy y 7 días salen de los leads ya cargados; lo demás se pide aparte (ver PERIODOS).
@@ -2171,9 +2250,11 @@
       ((l.origen || l.destino) ? fila('Ruta', esc((l.origen || '¿?') + ' a ' + (l.destino || '¿?'))) : '') +
       fila('Asesor', esc(usuario(l.asesorId).nombre)) + fila('Asignado', (esHoy(l.asignado) ? 'hoy ' : fmtDia(l.asignado) + ' ') + fmtHora(l.asignado) + ' <span class="muy-tenue">(' + hace(l.asignado) + ')</span>') +
       fila('Primer contacto', l.contactadoEn ? fmtHora(l.contactadoEn) + ' <span class="muy-tenue">(' + Math.max(0, Math.round((l.contactadoEn - l.asignado) / MIN)) + ' min después)</span>' : '<span style="color:var(--coral)">Todavía no</span>') +
+      (l.proxima ? fila('Seguimiento', '<span' + (l.proxima.ts < Date.now() ? ' style="color:var(--coral)"' : '') + '>' + (esHoy(l.proxima.ts) ? 'hoy ' : fmtDia(l.proxima.ts) + ' ') + fmtHora(l.proxima.ts) + '</span> · ' + esc(l.proxima.accion) +
+        (puedeEditar(l) ? ' <button type="button" class="btn btn-sec btn-chico" data-accion="hecho" data-id="' + l.id + '">Hecho</button>' : '')) : '') +
       fila('Comprobante de contacto', l.comprobante ? 'Subido · <button type="button" class="btn btn-sec btn-chico" data-accion="ver-comprobante">Ver</button>' : '<span class="muy-tenue">Sin subir</span>') +
-      (esMio && !l.comprobante && !['erroneo', 'perdido'].includes(l.estado)
-        ? '<div class="zona-archivos" id="zonaArchivos" style="margin-top:16px"><p><b>Sube la captura del primer contacto</b></p><p class="ayuda" style="margin:4px 0 10px">Arrastra la imagen aquí o elígela. Con eso el lead queda como contactado y cuenta tu tiempo de respuesta.</p>' +
+      ((esMio || rol === 'asignador') && !l.comprobante && !['erroneo', 'perdido'].includes(l.estado)
+        ? '<div class="zona-archivos" id="zonaArchivos" style="margin-top:16px"><p><b>' + (esMio ? 'Sube la captura del primer contacto' : 'Sube la captura del primer contacto de ' + esc(usuario(l.asesorId).nombre)) + '</b></p><p class="ayuda" style="margin:4px 0 10px">Arrastra la imagen aquí, pégala con Ctrl+V o elígela. Con eso el lead queda como contactado y cuenta tu tiempo de respuesta.</p>' +
           '<button type="button" class="btn btn-sec btn-chico" data-accion="elegir-archivos">Elegir captura</button></div>' : '') +
       '<details style="margin-top:16px"><summary class="tenue" style="cursor:pointer;font-size:14px">Lo que llenó el cliente</summary><p style="white-space:pre-wrap;font-size:14px;margin-top:8px">' + esc(l.textoCliente) + '</p></details>';
 
@@ -2195,6 +2276,7 @@
           '<button type="button" class="btn btn-sec btn-chico" data-accion="copiar-tel">Copiar número</button>' : '') + '</div>' + pasos + '</div>' +
       '<div class="cajon-cuerpo" id="cajonCuerpo">' + cuerpo + '</div>' +
       '<div class="cajon-pie">' + (esMio && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-lima" data-accion="abrir-asistente" data-id="' + l.id + '">Pedir ayuda al asistente</button>' : '') +
+      (editable && haySeguimiento && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-sec" data-accion="seguimiento">' + (l.proxima ? 'Cambiar seguimiento' : 'Programar seguimiento') + '</button>' : '') +
       (editable && !['cerrado', 'perdido'].includes(l.estado) ? '<button type="button" class="btn btn-sec" data-accion="perdido">Marcar como perdido</button>' : '') +
       (puedeReportarLE ? '<button type="button" class="btn btn-peligro" data-accion="reportar-le"' + (c.quedan === 0 ? ' disabled title="Ya usaste todos tus reportes de hoy"' : '') + '>Reportar como erróneo (' + c.quedan + ' disponibles)</button>' : '') +
       (rol === 'asignador' ? '<button type="button" class="btn btn-peligro" data-accion="borrar-lead">Eliminar el lead</button>' : '') +
@@ -2223,7 +2305,7 @@
       if (dato.length > COMPROBANTE_MAX * 1.37) throw new Error('La imagen sigue siendo muy pesada. Haz una captura más pequeña.');
       const { data, error } = await sb.from('leads').update({ foto_contacto_url: dato, contactado_en: new Date().toISOString(), estado: 'contactado' }).eq('id', l.id).select('id');
       if (error) throw error;
-      if (!data || !data.length) throw new Error('Supabase no dejó guardarlo: el lead no es tuyo o ya no es de hoy.');
+      if (!data || !data.length) throw new Error(rol === 'asignador' ? 'Supabase no dejó guardarlo: falta correr el SQL 07 (permiso de la asignadora en todos los leads).' : 'Supabase no dejó guardarlo: el lead no es tuyo.');
       l.comprobante = true; l.contactadoEn = Date.now(); l.estado = 'contactado';
       avisar('Comprobante subido: el lead quedó como contactado.');
       repintar(); recargar();
@@ -2307,7 +2389,7 @@
       '<fieldset><legend class="sr">Motivo</legend><div class="opciones">' + Object.keys(MOTIVOS_LE).map((k, i) =>
         '<label class="opcion"><input type="radio" name="motivo" value="' + k + '"' + (i === 0 ? ' required' : '') + '><span>' + esc(MOTIVOS_LE[k]) + '</span></label>').join('') + '</div></fieldset>' +
       '<label class="campo"><span>Cuéntalo en una frase</span><textarea class="entrada" name="detalle" maxlength="500" placeholder="Ej.: le escribí y llamé, el número no tiene WhatsApp y la llamada no entra." required></textarea></label>' +
-      '<label class="campo"><span>Captura como prueba' + (exige ? '' : ' (opcional)') + '</span><input class="entrada" type="file" name="captura" accept="image/*"' + (exige ? ' required' : '') + '></label>' +
+      '<label class="campo"><span>Captura como prueba' + (exige ? '' : ' (opcional)') + ' · puedes pegarla con Ctrl+V</span><input class="entrada" type="file" name="captura" accept="image/*"' + (exige ? ' required' : '') + '></label>' +
       '<div class="resultado-ia oculto" role="status" aria-live="polite"></div>' +
       '<p class="ayuda">' + (conIA
         ? 'La IA revisa la captura y tu explicación antes de enviarlo. Si lo aprueba, se te devuelve el cupo en menos de un minuto y tu próximo lead es la reposición; si no, puedes probar con otra captura.'
@@ -2463,12 +2545,12 @@
     const t = sinAcentos(texto);
     if (/cuantos|me quedan|limite|cupo de report/.test(t)) return { tipo: 'cupo' };
     if (/no existe|no tiene whats|numero (malo|equivocado|invalido|errado)|no entra|fuera de servicio|no sale la llamada|no le llega|mal escrito/.test(t)) return { tipo: 'erroneo', motivo: 'numero_invalido' };
-    if (/no (pidio|solicito|lleno|dejo sus datos)|nunca pidio|no sabe (de|por) que|no se registro/.test(t)) return { tipo: 'erroneo', motivo: 'no_solicito' };
+    if (/no (pidio|solicito|lleno|dejo sus datos)|nunca pidio|no sabe (de|por) que|no se registro|no (le|me) interesa|ya no (quiere|quiero)|no quiere (nada|que (le|lo|la) escriban)/.test(t)) return { tipo: 'erroneo', motivo: 'no_solicito' };
     if (/repetid|duplicad|ya (era|es) cliente|ya lo (tengo|atendi)|mismo cliente|ya me lo (dieron|asignaron)/.test(t)) return { tipo: 'erroneo', motivo: 'duplicado' };
     if (/otra ruta|otro pais|es de (venezuela|argentina|espana|colombia)|no es de (esta|mi) ruta/.test(t)) return { tipo: 'erroneo', motivo: 'otra_ruta' };
     if (/falso|de prueba|broma|inventad|datos raros/.test(t)) return { tipo: 'erroneo', motivo: 'datos_falsos' };
     if (/no (me )?contesta|no responde|no atiende|me deja en visto|en visto|no me escribe|no lee/.test(t)) return { tipo: 'no_contesta' };
-    if (/ya compro|otra agencia|no le interesa|muy caro|cambio de planes|ya no viaja/.test(t)) return { tipo: 'perdido', motivo: /otra agencia|ya compro/.test(t) ? 'Ya compró con otra agencia' : /caro/.test(t) ? 'El precio no le sirvió' : /planes|no viaja/.test(t) ? 'Cambió de planes' : 'Otro' };
+    if (/ya compro|otra agencia|muy caro|cambio de planes|ya no viaja/.test(t)) return { tipo: 'perdido', motivo: /otra agencia|ya compro/.test(t) ? 'Ya compró con otra agencia' : /caro/.test(t) ? 'El precio no le sirvió' : /planes|no viaja/.test(t) ? 'Cambió de planes' : 'Otro' };
     return { tipo: 'desconocido' };
   }
   function misLeadsAbiertos() {
@@ -2807,6 +2889,7 @@
       case 'abrir-menu': $('#lateral').classList.add('abierto'); $('#veloLateral').classList.add('abierto'); setTimeout(() => { const a = $('#nav a'); if (a) a.focus(); }, 60); break;
       case 'cerrar-menu': $('#lateral').classList.remove('abierto'); $('#veloLateral').classList.remove('abierto'); break;
       case 'salir': cerrarSesion(); break;
+      case 'tema': aplicarTema(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro', true); break;
       case 'turno': {
         if (miTurno()) {
           abrirModal('<form class="formulario"><h2 id="modalTitulo">Salir del turno</h2><p>Te quitamos de la hoja de reparto de tus rutas y dejas de recibir leads nuevos. Los que ya tienes no cambian.</p><p class="error-campo oculto" role="alert"></p>' + botonesModal('Salir del turno', true) + '</form>',
@@ -2953,6 +3036,21 @@
         break;
       }
       case 'perdido': if (l) modalPerdido(l); break;
+      case 'seguimiento': {
+        if (!l || !puedeEditar(l)) break;
+        if (faltaComprobante(l)) { pedirComprobante(); break; }   // primero el contacto, después el seguimiento
+        modalSeguimiento(l); break;
+      }
+      case 'hecho': case 'posponer': {
+        const s = leadPorId(b.dataset.id) || l; if (!s || !s.proxima || !puedeEditar(s)) break;
+        // A mañana: misma hora, el próximo día que todavía no haya pasado.
+        let nuevo = null;
+        if (acc === 'posponer') { nuevo = s.proxima.ts + DIA; while (nuevo <= Date.now()) nuevo += DIA; }
+        b.disabled = true;
+        guardarSeguimiento(s, nuevo, nuevo ? s.proxima.accion : '').then(() => { avisar(nuevo ? 'Seguimiento pasado a mañana a las ' + fmtHora(nuevo) + '.' : 'Seguimiento hecho.'); repintar(); },
+          (er) => { avisar('No se pudo guardar: ' + mensajeError(er), 'err'); b.disabled = false; });
+        break;
+      }
       case 'reportar-le': if (l) modalErroneo(l); break;
       case 'borrar-lead': {
         if (!l || rol !== 'asignador') break;
@@ -3271,7 +3369,7 @@
   function pintarAcceso(mensaje, tipo) {
     const crear = modoAcceso === 'crear';
     const logo = document.querySelector('.logo');
-    $('#acceso').innerHTML = '<div class="acceso-pila"><div class="acceso-logo">' + (logo ? '<img alt="Turisto" src="' + esc(logo.getAttribute('src')) + '">' : '<b>Turisto</b>') + '</div>' +
+    $('#acceso').innerHTML = BOTON_TEMA + '<div class="acceso-pila"><div class="acceso-logo">' + (logo ? '<img alt="Turisto" src="' + esc(logo.getAttribute('src')) + '">' : '<b>Turisto</b>') + '</div>' +
       '<form class="formulario acceso-caja" id="formAcceso" novalidate>' +
       '<h1 style="font:700 24px Space Grotesk;margin-bottom:4px">' + (crear ? 'Crear cuenta' : 'Entrar al panel') + '</h1>' +
       '<p class="tenue" style="margin-bottom:8px">Panel de asesores · Venezuela y Argentina</p>' +
@@ -3348,6 +3446,7 @@
         conectarTiempoReal();
         consultarMiCupo(); consultarPausa(); consultarOrdenHoja();
         temporizadores.push(setInterval(() => recargar(0), 60000));
+        temporizadores.push(setInterval(revisarSeguimientos, 30000)); setTimeout(revisarSeguimientos, 3000);
         temporizadores.push(setInterval(consultarMiCupo, 120000));
         temporizadores.push(setInterval(consultarPausa, 120000));
         temporizadores.push(setInterval(consultarOrdenHoja, 120000));

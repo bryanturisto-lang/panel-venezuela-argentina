@@ -28,4 +28,5 @@ En el Supabase de Venezuela/Argentina, en este orden:
 1. `02_supabase_verificacion_ia.sql` (el mismo de Colombia/España). ✅ 6 nov
 2. `06_venezuela_argentina_panel_v2.sql`. ✅ 6 nov
 3. Función de IA desplegada (URL `super-action`) y el secreto `ANTHROPIC_API_KEY`. ✅ 6 nov
-4. Con los asesores ya en este panel: Ajustes → Revisión con IA → Obligatoria.
+4. `07_venezuela_argentina_seguimiento.sql` (seguimiento y captura de contacto por la asignadora).
+5. Con los asesores ya en este panel: Ajustes → Revisión con IA → Obligatoria.
