@@ -1483,7 +1483,8 @@
     const sel = $('#selRuta');
     sel.classList.toggle('oculto', rutasVisibles.length < 2);
     suave(sel).innerHTML = ['TODAS', ...rutasVisibles].map(r => '<button type="button" data-ruta="' + r + '" aria-pressed="' + (r === rutaFiltro) + '">' + (r === 'TODAS' ? 'Todas' : RUTAS[r]) + '</button>').join('');
-    $('#fabAsistente').classList.toggle('oculto', rol !== 'asesor' || $('#asistente').classList.contains('abierto'));
+    // El asistente es para quien atiende leads: asesores y asignadores (líderes que también trabajan leads).
+    $('#fabAsistente').classList.toggle('oculto', !usaAsistente() || $('#asistente').classList.contains('abierto'));
     pintarTurnoLateral();
   }
 
@@ -2275,7 +2276,7 @@
         (tel ? '<a class="btn btn-sec btn-chico" href="https://wa.me/' + esc(tel) + '" target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a>' +
           '<button type="button" class="btn btn-sec btn-chico" data-accion="copiar-tel">Copiar número</button>' : '') + '</div>' + pasos + '</div>' +
       '<div class="cajon-cuerpo" id="cajonCuerpo">' + cuerpo + '</div>' +
-      '<div class="cajon-pie">' + (esMio && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-lima" data-accion="abrir-asistente" data-id="' + l.id + '">Pedir ayuda al asistente</button>' : '') +
+      '<div class="cajon-pie">' + ((esMio || (rol === 'asignador' && l.asesorId === yo().id)) && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-lima" data-accion="abrir-asistente" data-id="' + l.id + '">Pedir ayuda al asistente</button>' : '') +
       (editable && haySeguimiento && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-sec" data-accion="seguimiento">' + (l.proxima ? 'Cambiar seguimiento' : 'Programar seguimiento') + '</button>' : '') +
       (editable && !['cerrado', 'perdido'].includes(l.estado) ? '<button type="button" class="btn btn-sec" data-accion="perdido">Marcar como perdido</button>' : '') +
       (puedeReportarLE ? '<button type="button" class="btn btn-peligro" data-accion="reportar-le"' + (c.quedan === 0 ? ' disabled title="Ya usaste todos tus reportes de hoy"' : '') + '>Reportar como erróneo (' + c.quedan + ' disponibles)</button>' : '') +
@@ -2591,8 +2592,9 @@
   // Cierra los botones de un mensaje viejo para que no se pueda confirmar dos veces.
   const cerrarOpciones = () => asis.mensajes.forEach(m => { if (m.acciones) m.cerrado = true; });
 
+  const usaAsistente = () => rol === 'asesor' || rol === 'asignador';
   function abrirAsistente(leadId) {
-    if (rol !== 'asesor') return;
+    if (!usaAsistente()) return;
     const panel = $('#asistente');
     if (!panel.classList.contains('abierto')) focoAntesAsistente = document.activeElement;
     const nuevoLead = leadId ? Number(leadId) : null;
@@ -2612,7 +2614,7 @@
     const panel = $('#asistente');
     if (!panel.classList.contains('abierto')) return;
     panel.classList.remove('abierto'); panel.setAttribute('aria-hidden', 'true');
-    $('#fabAsistente').classList.toggle('oculto', rol !== 'asesor');
+    $('#fabAsistente').classList.toggle('oculto', !usaAsistente());
     if (focoAntesAsistente && document.contains(focoAntesAsistente)) focoAntesAsistente.focus();
   }
   function reiniciarAsistente() {
