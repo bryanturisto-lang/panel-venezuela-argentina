@@ -10,7 +10,7 @@ Panel de asesores de Turisto (versión 2) para las rutas **Venezuela**, **Argent
   - **Argentina y Arg / Vzla**: Argentina + Arg / Vzla (todos).
   - Si un grupo queda a medias, el panel lo muestra y deja completar la pausa o reanudar todo.
 - Turno AM de 9:00 a 17:00 y PM de 18:00 a 23:00, hora de Caracas, en las tres rutas.
-- Leads erróneos con revisión de la captura por IA (función `verificar-captura-erroneo` de este proyecto de Supabase).
+- Leads erróneos con revisión de la captura por IA (función que en Supabase se llama `verificar-captura-erroneo`; su URL es `super-action`).
 
 ## Qué hace
 
@@ -25,7 +25,7 @@ Panel de asesores de Turisto (versión 2) para las rutas **Venezuela**, **Argent
 
 En el Supabase de Venezuela/Argentina, en este orden:
 
-1. `02_supabase_verificacion_ia.sql` (el mismo de Colombia/España).
-2. `06_venezuela_argentina_panel_v2.sql`.
-3. Función `verificar-captura-erroneo` desplegada con ese nombre exacto y el secreto `ANTHROPIC_API_KEY`.
+1. `02_supabase_verificacion_ia.sql` (el mismo de Colombia/España). ✅ 6 nov
+2. `06_venezuela_argentina_panel_v2.sql`. ✅ 6 nov
+3. Función de IA desplegada (URL `super-action`) y el secreto `ANTHROPIC_API_KEY`. ✅ 6 nov
 4. Con los asesores ya en este panel: Ajustes → Revisión con IA → Obligatoria.
