@@ -507,6 +507,11 @@
   .resultado-ia.ok b::before { content: "✓ "; color: var(--menta); }
   .resultado-ia.duda b::before { content: "! "; color: var(--ambar); }
   .resultado-ia.revisando { border-style: dashed; }
+  .aviso-repo { font-size: 13.5px; margin-top: 8px; padding: 7px 10px; border-radius: 8px; border-left: 3px solid var(--linea); background: var(--tinta); }
+  .aviso-repo.ok { border-left-color: var(--menta); }
+  .aviso-repo.ok::before { content: "✓ "; color: var(--menta); font-weight: 700; }
+  .aviso-repo.espera { border-left-color: var(--ambar); }
+  .aviso-repo.no { border-left-color: var(--coral); }
   .demo-ia { margin-top: 12px; padding: 10px 12px; border: 1px dashed var(--lima); border-radius: 10px; }
   .demo-ia > span { color: var(--lima-tinta) !important; }
 
@@ -1002,6 +1007,7 @@
       id: f.id, leadId: f.lead_id, asesorId: f.asesor_id || null, asesorNombre: f.asesor_nombre || '', cliente: f.cliente || '', ruta: f.ruta,
       motivo: f.motivo, detalle: f.detalle || '', estado: f.estado, revisado: !!f.revisado, resultado: f.resultado || '',
       evidencia: f.tiene_evidencia !== false, ts: f.creado_en ? new Date(f.creado_en).getTime() : Date.now(), fecha: f.fecha,
+      reposicionEn: f.reposicion_en ? new Date(f.reposicion_en).getTime() : null,
       revisadoPor: f.revisado_por_nombre || null, nota: f.nota_revision || '',
       ia: f.veredicto_ia ? { veredicto: f.veredicto_ia, explicacion: f.explicacion_ia || '' } : null
     };
@@ -1193,11 +1199,11 @@
     const COL_REP_MIN = 'id, lead_id, asesor_id, motivo, detalle, estado, resultado, revisado, revisado_por_nombre, nota_revision, creado_en';
     const repBase = (col) => () => {
       let q = sb.from('reportes_erroneos').select(col).in('ruta', rutasConsulta);
-      q = veTodoAhora ? q.gte('fecha', desde) : q.eq('fecha', hoy).eq('asesor_id', miId);
+      q = veTodoAhora ? q.gte('fecha', desde) : q.gte('fecha', fechaConDesfase(-DIAS_REPOSICION)).eq('asesor_id', miId);
       return q.order('id', { ascending: false }).limit(400);
     };
     let filasRep = [];
-    try { filasRep = await primeraQueFuncione([repBase(COL_REP + IA), repBase(COL_REP), repBase(COL_REP_MIN + IA), repBase(COL_REP_MIN)]); }
+    try { filasRep = await primeraQueFuncione([repBase(COL_REP + ', reposicion_en' + IA), repBase(COL_REP + IA), repBase(COL_REP), repBase(COL_REP_MIN + IA), repBase(COL_REP_MIN)]); }
     catch (e) { console.warn('reportes_erroneos no disponible', e); }
 
     // Ajustes de leads erróneos
@@ -1397,6 +1403,8 @@
   // ---- Límite de leads erróneos (el mismo cálculo que el panel actual) ----
   // Cuentan los reportes de hoy pendientes, en revisión o aplicados; los anulados y no aplicados no.
   const CUENTAN_EN_CUPO = ['pendiente', 'en_revision', 'aplicado'];
+  // Días que el Apps Script guarda una reposición pendiente (LE_DIAS_REPOSICION).
+  const DIAS_REPOSICION = 3;
   function cupoLE(asesorId) {
     const recibidos = datos.leads.filter(l => l.asesorId === asesorId && esHoy(l.asignado)).length;
     const usados = datos.reportes.filter(r => r.asesorId === asesorId && (r.fecha ? r.fecha === hoyClave() : esHoy(r.ts)) && CUENTAN_EN_CUPO.includes(r.estado)).length;
@@ -1938,8 +1946,8 @@
       const c = cupoLE(yo().id);
       const mios = datos.reportes.filter(r => r.asesorId === yo().id).sort((a, b) => b.ts - a.ts).slice(0, 30);
       return '<div class="cabeza"><div><h1>Leads erróneos</h1><p class="sub">Si un lead no es real (número que no existe, repetido, de otra ruta…) repórtalo desde el propio lead, antes de subir el comprobante de contacto. Te devolvemos el cupo y tu próximo lead es la reposición.</p></div></div>' +
-        '<div class="rejilla-inicio"><section class="bloque" aria-labelledby="tMisLE"><header><h2 id="tMisLE">Tus reportes de hoy</h2></header>' +
-        (mios.length ? mios.map(reporteHtml).join('') : vacioHtml('Hoy no has reportado leads', 'Abre un lead y usa “Reportar como erróneo”.')) + '</section>' +
+        '<div class="rejilla-inicio"><section class="bloque" aria-labelledby="tMisLE"><header><h2 id="tMisLE">Tus reportes de estos días</h2></header>' +
+        (mios.length ? mios.map(reporteHtml).join('') : vacioHtml('No has reportado leads estos días', 'Abre un lead y usa “Reportar como erróneo”.')) + '</section>' +
         '<div class="columna"><section class="bloque" aria-labelledby="tCupoLE"><h2 id="tCupoLE" style="margin-bottom:12px">Tu cupo de hoy</h2>' +
         '<div class="cupo-le"><span class="num">' + c.usados + ' de ' + c.limite + '</span><span>usados</span></div>' +
         '<p class="ayuda">' + esc(textoReglaLE()) + ' Hoy recibiste ' + c.recibidos + ' leads.</p></section></div></div>';
@@ -2022,6 +2030,14 @@
         (r.ia.veredicto === 'confirma' ? 'La IA lo da por válido' : r.ia.veredicto === 'no_confirma' ? 'La IA no lo da por válido' : r.ia.veredicto === 'dudoso' ? 'La IA tenía dudas (revisión anterior)' : 'La IA no pudo revisar la captura') + '</b>' +
         '<span>' + esc(r.ia.explicacion) + '</span></div>'
       : '';
+    // Reposición: pendiente (en la fila del reparto), entregada o vencida.
+    const tu = !veTodo();
+    const diasReporte = r.fecha ? Math.round((Date.parse(hoyClave() + 'T12:00:00Z') - Date.parse(r.fecha + 'T12:00:00Z')) / 86400000) : 0;
+    const avisoRepo = r.estado !== 'aplicado' ? (r.estado === 'no_aplicado' && r.resultado ? '<p class="aviso-repo no">' + esc(r.resultado) + '</p>' : '')
+      : r.reposicionEn ? '<p class="aviso-repo ok">Reposición entregada ' + (esHoy(r.reposicionEn) ? 'hoy a las ' + fmtHora(r.reposicionEn) : 'el ' + String(fmtDia(r.reposicionEn)).replace(/\.$/, '')) + '.</p>'
+      : (/venci/i.test(r.resultado) || diasReporte > DIAS_REPOSICION)
+        ? '<p class="aviso-repo no">La reposición venció: en ' + DIAS_REPOSICION + ' días no entró un lead de esta ruta ' + (tu ? 'estando tú' : 'con el asesor') + ' en turno. El cupo sí se devolvió.</p>'
+        : '<p class="aviso-repo espera">Reposición pendiente: ' + (tu ? 'te llega con tu' : 'le llega con su') + ' próximo lead de esta ruta mientras ' + (tu ? 'estés' : 'esté') + ' en turno (se guarda ' + DIAS_REPOSICION + ' días).</p>';
     const avisoRevision = r.estado === 'en_revision'
       ? '<p class="tenue" style="font-size:13.5px;margin-top:8px">' + (veTodo() ? 'El cupo no se le devuelve hasta que lo apruebes.' : 'Cuando supervisión lo apruebe se te devuelve el cupo y te llega la reposición.') + '</p>'
       : '';
@@ -2030,7 +2046,7 @@
       '<div style="flex:1;min-width:200px"><b>' + esc(MOTIVOS_LE[r.motivo] || r.motivo) + '</b><p class="tenue" style="font-size:14px;margin-top:2px">“' + esc(r.detalle) + '”</p>' +
       '<p class="muy-tenue" style="font-size:12.5px;margin-top:6px">' + esc(l.cliente) + ' · ' + (veTodo() ? esc(r.asesorNombre || usuario(r.asesorId).nombre) + ' · ' : '') + (esHoy(r.ts) ? 'hoy ' + fmtHora(r.ts) : fmtDia(r.ts)) +
       (r.evidencia ? ' · con captura' : ' · sin captura') + (r.revisadoPor ? ' · revisó ' + esc(r.revisadoPor) : '') + '</p>' +
-      (r.nota ? '<p style="font-size:13.5px;margin-top:6px">' + (/^(Aprobado|Anulado) por la IA/.test(r.nota) ? '' : 'Nota de supervisión: ') + esc(r.nota) + '</p>' : '') + lineaIA + avisoRevision + '</div>' +
+      (r.nota ? '<p style="font-size:13.5px;margin-top:6px">' + (/^(Aprobado|Anulado) por la IA/.test(r.nota) ? '' : 'Nota de supervisión: ') + esc(r.nota) + '</p>' : '') + lineaIA + avisoRevision + avisoRepo + '</div>' +
       '<span class="estado-et" data-e="' + est[1] + '">' + esc(est[0]) + '</span></div>' +
       (veTodo() ? '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">' +
 
