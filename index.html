@@ -2281,7 +2281,7 @@
     // Mismas reglas que el panel actual: solo antes del contacto, sin reporte anulado y si los reportes están encendidos.
     const contactado = l.comprobante || l.contactadoEn || l.estado === 'contactado';
     const puedeReportarLE = esMio && datos.ajustes.disponible && datos.ajustes.activo && !yaReportado && !reportesLead.some(r => r.estado === 'anulado') &&
-      !contactado && !['cerrado', 'erroneo', 'perdido'].includes(l.estado);
+      !['cerrado', 'erroneo', 'perdido'].includes(l.estado);   // contactado: solo "ya no le interesa" (SQL 08)
 
     suave($('#cajon')).innerHTML =
       '<div class="cajon-cab"><div class="fila"><div><span class="ruta"><span class="ruta-cod" id="cajonTitulo">' + esc(codigo(l.origen)) + '</span>' + TRAYECTO.replace('class="trayecto"', 'class="trayecto" style="width:70px;height:18px"') + '<span class="ruta-cod">' + esc(codigo(l.destino)) + '</span></span>' +
@@ -2295,10 +2295,10 @@
       '<div class="cajon-pie">' + ((esMio || (rol === 'asignador' && l.asesorId === yo().id)) && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-lima" data-accion="abrir-asistente" data-id="' + l.id + '">Pedir ayuda al asistente</button>' : '') +
       (editable && haySeguimiento && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<button type="button" class="btn btn-sec" data-accion="seguimiento">' + (l.proxima ? 'Cambiar seguimiento' : 'Programar seguimiento') + '</button>' : '') +
       (editable && !['cerrado', 'perdido'].includes(l.estado) ? '<button type="button" class="btn btn-sec" data-accion="perdido">Marcar como perdido</button>' : '') +
-      (puedeReportarLE ? '<button type="button" class="btn btn-peligro" data-accion="reportar-le"' + (c.quedan === 0 ? ' disabled title="Ya usaste todos tus reportes de hoy"' : '') + '>Reportar como erróneo (' + c.quedan + ' disponibles)</button>' : '') +
+      (puedeReportarLE ? '<button type="button" class="btn btn-peligro" data-accion="reportar-le"' + (c.quedan === 0 ? ' disabled title="Ya usaste todos tus reportes de hoy"' : '') + '>' + (contactado ? 'Ya no le interesa: reportar' : 'Reportar como erróneo') + ' (' + c.quedan + ' disponibles)</button>' : '') +
       (rol === 'asignador' ? '<button type="button" class="btn btn-peligro" data-accion="borrar-lead">Eliminar el lead</button>' : '') +
       (yaReportado ? '<span class="tenue" style="font-size:13.5px;align-self:center">Este lead ya fue reportado como erróneo.</span>'
-        : esMio && contactado && !['cerrado', 'perdido', 'erroneo'].includes(l.estado) ? '<span class="muy-tenue" style="font-size:13px;align-self:center">Ya contactado: no se puede reportar como erróneo.</span>' : '') + '</div>';
+        : '') + '</div>';
     activarZonaArchivos();
   }
 
@@ -2398,13 +2398,17 @@
   const iaObligatoria = () => datos.ajustes.verificacionIA === 'obligatoria';
   function modalErroneo(l) {
     const c = cupoLE(yo().id);
+    // Ya contactado: solo se puede reportar porque el cliente no pidió información o ya no le interesa.
+    const soloNoInteresa = !!(l.comprobante || l.contactadoEn || l.estado === 'contactado');
+    const motivos = soloNoInteresa ? ['no_solicito'] : Object.keys(MOTIVOS_LE);
     const conIA = iaObligatoria();
     const exige = datos.ajustes.exigirCaptura || conIA;
     let revision = null;      // { clave, ia } de la última captura revisada
     abrirModal('<form class="formulario" novalidate><h2 id="modalTitulo">Reportar como erróneo</h2><p>' + esc(l.cliente) + ' · ' + esc(telVisible(l.tel)) + '</p>' +
       '<div class="cupo-le" style="margin:0"><span class="num">' + c.quedan + '</span><span>reportes disponibles hoy de ' + c.limite + '. ' + esc(textoReglaLE()) + '</span></div>' +
-      '<fieldset><legend class="sr">Motivo</legend><div class="opciones">' + Object.keys(MOTIVOS_LE).map((k, i) =>
-        '<label class="opcion"><input type="radio" name="motivo" value="' + k + '"' + (i === 0 ? ' required' : '') + '><span>' + esc(MOTIVOS_LE[k]) + '</span></label>').join('') + '</div></fieldset>' +
+      (soloNoInteresa ? '<p class="ayuda">Como ya lo contactaste, solo se puede reportar si el cliente dice que no pidió información o que ya no le interesa. La captura tiene que mostrar el chat donde lo dice.</p>' : '') +
+      '<fieldset><legend class="sr">Motivo</legend><div class="opciones">' + motivos.map((k, i) =>
+        '<label class="opcion"><input type="radio" name="motivo" value="' + k + '"' + (i === 0 ? ' required' : '') + (soloNoInteresa ? ' checked' : '') + '><span>' + esc(MOTIVOS_LE[k]) + '</span></label>').join('') + '</div></fieldset>' +
       '<label class="campo"><span>Cuéntalo en una frase</span><textarea class="entrada" name="detalle" maxlength="500" placeholder="Ej.: le escribí y llamé, el número no tiene WhatsApp y la llamada no entra." required></textarea></label>' +
       '<label class="campo"><span>Captura como prueba' + (exige ? '' : ' (opcional)') + ' · puedes pegarla con Ctrl+V</span><input class="entrada" type="file" name="captura" accept="image/*"' + (exige ? ' required' : '') + '></label>' +
       '<div class="resultado-ia oculto" role="status" aria-live="polite"></div>' +
@@ -2686,8 +2690,8 @@
         decir('Este lead ya está como “' + NOMBRE_ESTADO[l.estado] + '”, así que no se puede reportar como erróneo.', { lead: l.id });
         return;
       }
-      if (l.estado !== 'nuevo' || l.comprobante || l.contactadoEn) {
-        decir('Este lead ya está contactado, así que no se puede reportar como erróneo: se reporta antes de subir el comprobante. Si no sirve, márcalo como perdido.', { lead: l.id });
+      if ((l.estado !== 'nuevo' || l.comprobante || l.contactadoEn) && intencion.motivo !== 'no_solicito') {
+        decir('Este lead ya está contactado: solo se puede reportar como erróneo si el cliente dice que no pidió información o que ya no le interesa. Si es otra cosa, márcalo como perdido.', { lead: l.id });
         return;
       }
       const c = cupoLE(yo().id);
@@ -2758,8 +2762,8 @@
     asis.pendiente = null; asis.adjuntoEnviado = null; cerrarOpciones();
     if (p.tipo === 'erroneo') {
       // Se vuelve a comprobar justo antes de actuar; el servidor lo valida otra vez.
-      if (cupoLE(yo().id).quedan === 0 || datos.reportes.some(r => r.leadId === l.id && r.estado !== 'anulado') || l.estado !== 'nuevo' || l.comprobante) {
-        decir('No pude reportarlo: algo cambió desde que lo propuse (cupo agotado, ya reportado o el lead ya está contactado).'); return;
+      if (cupoLE(yo().id).quedan === 0 || datos.reportes.some(r => r.leadId === l.id && r.estado !== 'anulado') || ((l.estado !== 'nuevo' || l.comprobante) && p.motivo !== 'no_solicito') || ['cerrado', 'perdido', 'erroneo'].includes(l.estado)) {
+        decir('No pude reportarlo: algo cambió desde que lo propuse (cupo agotado, ya reportado o el lead cambió de estado).'); return;
       }
       asis.ocupado = true; pintarChat();
       try {
