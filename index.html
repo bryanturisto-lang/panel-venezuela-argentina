@@ -937,6 +937,23 @@
   // Turnos (hora de Caracas): AM de 9:00 a 17:00 y PM de 18:00 a 23:00, igual en las tres rutas.
   const APERTURA_AM = { VENEZUELA: 9 * 60, ARGENTINA: 9 * 60, ARGVZLA: 9 * 60 };
   const hhmm = (min) => Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0');
+  // Cierre del turno AM por ruta y rutas sin turno PM (hora de Caracas).
+  // España (9 nov 2026): un solo turno, de 4:00 a 18:00; no tiene turno PM.
+  const CIERRE_AM = {};            // todas cierran el AM a las 17:00
+  const SIN_TURNO_PM = {};          // todas tienen turno PM (18:00 a 23:00)
+  const cierreAm = (ruta) => (ruta && CIERRE_AM[ruta]) || 17 * 60;
+  const tieneTurnoPm = (ruta) => !SIN_TURNO_PM[ruta];
+  const aperturaAm = (ruta) => APERTURA_AM[ruta] != null ? APERTURA_AM[ruta] : Math.min.apply(null, Object.values(APERTURA_AM));
+  // Rutas (de la lista) que tienen abierto el turno t ahora.
+  const rutasAbiertas = (t, rutas) => (rutas && rutas.length ? rutas : Object.keys(APERTURA_AM)).filter(r => turnoActual(r) === t);
+  // "Hasta las …" del turno t en esas rutas: "17:00" o "17:00 (España hasta las 18:00)".
+  function finTurno(t, rutas) {
+    if (t === 'PM') return '23:00';
+    const rs = (rutas && rutas.length ? rutas : Object.keys(APERTURA_AM));
+    const base = Math.min.apply(null, rs.map(cierreAm));
+    const tarde = rs.filter(r => cierreAm(r) > base);
+    return hhmm(base) + (tarde.length ? ' (' + tarde.map(r => RUTAS[r] + ' hasta las ' + hhmm(cierreAm(r))).join(', ') + ')' : '');
+  }
   function minutosCaracas() {
     const p = new Intl.DateTimeFormat('en-GB', { timeZone: ZONA, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
     const v = (t) => Number((p.find(x => x.type === t) || {}).value) || 0;
@@ -945,12 +962,14 @@
   // Con ruta: el turno abierto en esa ruta. Sin ruta: el turno abierto en alguna ruta.
   function turnoActual(ruta) {
     const m = minutosCaracas();
-    const desde = ruta && APERTURA_AM[ruta] != null ? APERTURA_AM[ruta] : Math.min.apply(null, Object.values(APERTURA_AM));
-    if (m >= desde && m < 17 * 60) return 'AM';
-    if (m >= 18 * 60 && m < 23 * 60) return 'PM';
+    const rutas = ruta ? [ruta] : Object.keys(APERTURA_AM);
+    if (rutas.some(r => m >= aperturaAm(r) && m < cierreAm(r))) return 'AM';
+    if (rutas.some(tieneTurnoPm) && m >= 18 * 60 && m < 23 * 60) return 'PM';
     return null;
   }
-  const textoHorario = () => 'Turno AM de ' + hhmm(APERTURA_AM.VENEZUELA) + ' a 17:00 y PM de 18:00 a 23:00, hora de Caracas.';
+  // Horario para los avisos. Si todas las rutas tienen el mismo, se dice una sola vez.
+  const tramoHorario = (r) => hhmm(aperturaAm(r)) + ' a ' + hhmm(cierreAm(r)) + (tieneTurnoPm(r) ? ' y de 18:00 a 23:00' : '');
+  const textoHorario = () => { const rs = Object.keys(APERTURA_AM); return (rs.every(r => tramoHorario(r) === tramoHorario(rs[0])) ? 'Turno de ' + tramoHorario(rs[0]) : rs.map(r => RUTAS[r] + ' de ' + tramoHorario(r)).join('; ')) + ' (hora de Caracas).'; };
   // Rutas de una persona que todavía no abren.
   const rutasSinAbrir = (u) => u.rutas.filter(r => !turnoActual(r));
 
@@ -1020,7 +1039,7 @@
       rol: f.es_asignador ? 'asignador' : f.es_supervisor ? 'supervisor' : 'asesor',
       rutas: filasRutas.filter(r => r.asesor_id === f.id).map(r => r.ruta).filter(r => RUTAS[r]),
       estado: f.retirado ? 'retirado' : f.bloqueado ? 'bloqueado' : 'activo',
-      registros: suyos, enTurno: !!t && suyos.some(r => r.turno === t),
+      registros: suyos, enTurno: !!t && suyos.some(r => r.turno === t && turnoActual(r.ruta) === t),
       turno: t && suyos.some(r => r.turno === t) ? t : (suyos[0] ? suyos[0].turno : null),
       creado: f.creado_en ? Date.parse(f.creado_en) : null
     };
@@ -1501,7 +1520,7 @@
     if (rol !== 'asesor' && !(rol === 'asignador' && yo().rutas.length)) {
       const cuantos = asesoresActivos(rutaFiltro).filter(x => x.enTurno).length;
       const t = turnoActual();
-      suave(el).innerHTML = '<div class="estado"><span class="punto ' + (cuantos ? 'ok' : '') + '"></span>' + cuantos + ' asesores en turno</div><p class="muy-tenue" style="margin-top:4px">' + (t === 'AM' ? 'Turno AM, de ' + hhmm(APERTURA_AM.VENEZUELA) + ' a 17:00' : t === 'PM' ? 'Turno PM, de 18:00 a 23:00' : 'Ahora no hay turno abierto') + '</p>';
+      suave(el).innerHTML = '<div class="estado"><span class="punto ' + (cuantos ? 'ok' : '') + '"></span>' + cuantos + ' asesores en turno</div><p class="muy-tenue" style="margin-top:4px">' + (t ? 'Turno ' + t + ' hasta las ' + finTurno(t, rutasAbiertas(t, rutaFiltro === 'TODAS' ? null : [rutaFiltro])) : 'Ahora no hay turno abierto') + '</p>';
       return;
     }
     if (!yo().rutas.length) {
@@ -1510,7 +1529,7 @@
     }
     const dentro = miTurno(), t = turnoActual();
     suave(el).innerHTML = '<div class="estado"><span class="punto ' + (dentro ? 'ok' : '') + '"></span>' + (dentro ? 'Recibiendo leads' : 'Fuera del turno') + '</div>' +
-      '<p class="muy-tenue" style="margin-top:4px">' + (dentro ? 'Turno ' + t + ' hasta las ' + (t === 'AM' ? '17:00' : '23:00') : t ? 'Turno ' + t + ' abierto hasta las ' + (t === 'AM' ? '17:00' : '23:00') : 'Ahora no hay turno abierto. ' + textoHorario()) + '</p>' +
+      '<p class="muy-tenue" style="margin-top:4px">' + (dentro ? 'Turno ' + t + ' hasta las ' + finTurno(t, rutasAbiertas(t, yo().rutas)) : t && rutasAbiertas(t, yo().rutas).length ? 'Turno ' + t + ' abierto hasta las ' + finTurno(t, rutasAbiertas(t, yo().rutas)) : 'Ahora no hay turno abierto. ' + textoHorario()) + '</p>' +
       (!dentro && t ? (rutasPorRegistrar(yo(), t).length > 1
         ? '<a class="btn btn-lima btn-chico" style="margin-top:10px;width:100%" href="#/inicio">Elegir dónde registrarme</a>'
         : '<button type="button" class="btn btn-lima btn-chico" style="margin-top:10px;width:100%" data-accion="turno-registrar" data-valor=""' + (registrandoTurno ? ' disabled' : '') + '>' + (registrandoTurno ? 'Registrando…' : 'Registrarme en el turno') + '</button>') : '');
@@ -1587,7 +1606,7 @@
   let registrandoTurno = false;
   // Llamada a la acción arriba de todo: sin esto, en el celular el botón quedaba debajo de la lista de leads.
   // Rutas abiertas en las que la persona todavía no está registrada en este turno.
-  const rutasPorRegistrar = (u, t) => u.rutas.filter(r => turnoActual(r) && !u.registros.some(x => x.ruta === r && x.turno === t));
+  const rutasPorRegistrar = (u, t) => u.rutas.filter(r => turnoActual(r) === t && !u.registros.some(x => x.ruta === r && x.turno === t));
   // Con una ruta: un botón. Con varias: "Solo …" por ruta y "Todas".
   function botonesRegistro(faltan, chico) {
     const c = chico ? ' btn-chico' : '';
@@ -1606,10 +1625,10 @@
     if (!u.rutas.length || !t) return '';
     const faltan = rutasPorRegistrar(u, t);
     if (!faltan.length) return '';
-    const parcial = u.registros.some(x => x.turno === t);      // ya está en alguna ruta de este turno
+    const parcial = u.registros.some(x => x.turno === t && turnoActual(x.ruta) === t);   // ya está en alguna ruta abierta de este turno
     return '<section class="turno-cta" aria-labelledby="tCta"><span class="punto ' + (parcial ? 'ok' : 'alerta') + '"></span><div class="texto"><b id="tCta">' +
       (parcial ? '¿También quieres recibir de ' + esc(nombreRutas(faltan)) + '?' : 'No estás recibiendo leads') + '</b>' +
-      '<p>' + (parcial ? 'Ya estás recibiendo leads de ' + esc(nombreRutas(u.registros.filter(x => x.turno === t).map(x => x.ruta))) + '. Si quieres, regístrate también aquí. ' : '') + 'El turno ' + t + ' está abierto hasta las ' + (t === 'AM' ? '17:00' : '23:00') + ' (hora de Caracas). ' + (parcial ? '' : faltan.length > 1 ? 'Elige dónde quieres recibir leads: en una ruta o en todas.' : 'Regístrate para entrar en la lista de reparto' + (u.rutas.length > 1 ? ' de ' + esc(RUTAS[faltan[0]]) : '') + '.') + '</p></div>' +
+      '<p>' + (parcial ? 'Ya estás recibiendo leads de ' + esc(nombreRutas(u.registros.filter(x => x.turno === t).map(x => x.ruta))) + '. Si quieres, regístrate también aquí. ' : '') + 'El turno ' + t + ' está abierto hasta las ' + finTurno(t, faltan) + ' (hora de Caracas). ' + (parcial ? '' : faltan.length > 1 ? 'Elige dónde quieres recibir leads: en una ruta o en todas.' : 'Regístrate para entrar en la lista de reparto' + (u.rutas.length > 1 ? ' de ' + esc(RUTAS[faltan[0]]) : '') + '.') + '</p></div>' +
       botonesRegistro(faltan) + '</section>';
   }
   function turnoHtml() {
@@ -2135,7 +2154,7 @@
     return '<div class="cabeza"><div><h1>Turnos y cupos</h1><p class="sub">Quién se registró hoy en cada turno, cuántos leads lleva y quién tiene leads sin contactar.</p></div>' +
       (rol === 'asignador' ? '<div class="acciones"><button type="button" class="btn" data-accion="anotar-turno"' + (turnoActual() ? '' : ' disabled title="Ahora no hay turno abierto"') + '>Anotar en el turno</button><a class="btn btn-sec" href="#/asesores">Cambiar rutas</a></div>' : '') + '</div>' +
       '<div class="herramientas"><div class="segmentado" role="group" aria-label="Turno">' +
-      ['AM', 'PM'].map(t => '<button type="button" data-accion="turno-equipo" data-valor="' + t + '" aria-pressed="' + (filtrosEquipo.turno === t) + '">Turno ' + t + (t === 'AM' ? ' · hasta 17' : ' · 18 a 23') + '</button>').join('') + '</div></div>' +
+      ['AM', 'PM'].map(t => '<button type="button" data-accion="turno-equipo" data-valor="' + t + '" aria-pressed="' + (filtrosEquipo.turno === t) + '">Turno ' + t + (t === 'AM' ? ' · hasta las ' + hhmm(Math.max.apply(null, (rutaFiltro === 'TODAS' ? Object.keys(APERTURA_AM) : [rutaFiltro]).map(cierreAm))) : ' · 18 a 23') + '</button>').join('') + '</div></div>' +
       (asesores.length ? '<div class="tabla-marco"><table><caption class="sr">Asesores del turno ' + filtrosEquipo.turno + '</caption><thead><tr><th>Asesor</th><th>Ruta</th><th>Estado</th><th>Leads hoy</th><th class="num">Sin contactar</th><th class="num">Erróneos</th>' + (rol === 'asignador' ? '<th><span class="sr">Acciones</span></th>' : '') + '</tr></thead><tbody>' +
         asesores.map(a => {
           const hoy = datos.leads.filter(l => l.asesorId === a.id && esHoy(l.asignado));
