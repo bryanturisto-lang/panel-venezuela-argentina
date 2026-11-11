@@ -324,6 +324,28 @@
   .turno .opciones-registro .btn { flex: 1 1 auto; }
   @media (max-width: 1080px) { .rejilla-inicio.es-asesor > .columna { order: -1; } }
   @media (max-width: 560px) { .turno-cta .btn { width: 100%; } }
+  /* Reloj con segundos al lado del botón de registro (11 nov 2026). */
+  .registro-accion { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; }
+  .turno-cta .registro-accion { flex: none; max-width: 100%; }
+  .registro-accion > .btn, .registro-accion > .opciones-registro { flex: 1 1 auto; }
+  .reloj-vivo { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1; padding: 7px 12px; border-radius: var(--r-m);
+    background: var(--superficie); border: 1px solid var(--linea-suave); color: var(--violeta); white-space: nowrap; }
+  .reloj-vivo .etq { font: 600 10.5px/1.2 inherit; letter-spacing: .04em; text-transform: uppercase; color: var(--niebla-3); margin-bottom: 3px; }
+  .reloj-vivo .hms { font: 700 24px/1 'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums; }
+  .reloj-vivo.chico { padding: 5px 9px; }
+  .reloj-vivo.chico .hms { font-size: 17px; }
+  .lateral .registro-accion { margin-top: 10px; flex-wrap: nowrap; }
+  .lateral .registro-accion > .btn { min-width: 0; white-space: normal; }
+  .hora-registro { font-size: 13px; color: var(--niebla-2); }
+  .hora-registro b { font-variant-numeric: tabular-nums; color: var(--niebla); }
+  @media (max-width: 560px) {
+    .turno-cta .registro-accion { width: 100%; }
+    .registro-accion:not(:has(.opciones-registro)) { flex-wrap: nowrap; }
+    .registro-accion > .btn { width: auto; min-width: 0; white-space: normal; }
+    .reloj-vivo { padding: 6px 10px; }
+    .reloj-vivo .etq { font-size: 9.5px; }
+    .reloj-vivo .hms { font-size: 20px; }
+  }
   .aviso-hoja { border: 1px solid color-mix(in srgb, var(--ambar) 45%, var(--linea-suave)); background: color-mix(in srgb, var(--ambar) 8%, transparent); border-radius: var(--r-m); padding: 12px 14px; margin: 12px 0; font-size: 14px; }
   .aviso-hoja.rojo { border-color: color-mix(in srgb, var(--coral) 55%, var(--linea-suave)); background: color-mix(in srgb, var(--coral) 8%, transparent); }
   .aviso-hoja b { display: block; margin-bottom: 4px; }
@@ -864,6 +886,24 @@
   document.addEventListener('DOMContentLoaded', () => aplicarTema(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro'));
   const ZONA = 'America/Caracas';
   const fmtHora = (ts) => new Date(ts).toLocaleTimeString('es-VE', { timeZone: ZONA, hour: '2-digit', minute: '2-digit', hour12: false });
+  // Hora con segundos (hourCycle h23: con hour12:false algunos Chrome escriben 24:05 a medianoche).
+  const fmtHoraSeg = (ts) => new Date(ts).toLocaleTimeString('es-VE', { timeZone: ZONA, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  // Reloj del turno: si el reloj del equipo está corrido más de 1 minuto respecto de la hoja de reparto
+  // (horaServidor de action=estado, hora de Caracas), se muestra la hora de la hoja.
+  let desfaseRelojMs = 0;
+  const ahoraReal = () => Date.now() + desfaseRelojMs;
+  function ajustarReloj(horaServidor) {
+    const m = /^(\d{1,2}):(\d{2}):(\d{2})$/.exec(String(horaServidor || '').trim());
+    if (!m) return;
+    const srv = (+m[1]) * 3600 + (+m[2]) * 60 + (+m[3]);
+    const p = new Intl.DateTimeFormat('en-GB', { timeZone: ZONA, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
+    const v = (t) => Number((p.find(x => x.type === t) || {}).value) || 0;
+    let dif = srv - ((v('hour') % 24) * 3600 + v('minute') * 60 + v('second'));
+    if (dif > 43200) dif -= 86400; else if (dif < -43200) dif += 86400;
+    desfaseRelojMs = Math.abs(dif) > 60 ? dif * 1000 : 0;
+  }
+  const relojHtml = (chico) => '<span class="reloj-vivo' + (chico ? ' chico' : '') + '" role="timer" aria-label="Hora de Caracas">' +
+    (chico ? '' : '<span class="etq">Hora Caracas</span>') + '<span class="hms num" data-reloj>' + fmtHoraSeg(ahoraReal()) + '</span></span>';
   const fmtDia = (ts) => new Date(ts).toLocaleDateString('es-VE', { timeZone: ZONA, day: 'numeric', month: 'short' });
   const diaClave = (ts) => new Date(ts).toLocaleDateString('en-CA', { timeZone: ZONA });
   const hoyClave = () => diaClave(Date.now());
@@ -1281,6 +1321,7 @@
       await Promise.all(rutas.map(async (r) => {
         try {
           const resp = await llamarAppsScript({ action: 'estado' }, r);
+          if (resp && resp.horaServidor) ajustarReloj(resp.horaServidor);
           if (!resp || !Array.isArray(resp.asesoresAM) || !Array.isArray(resp.asesoresPM)) throw new Error('respuesta sin listas');
           const t = turnoActual(r) || (resp.turno === 'PM' ? 'PM' : 'AM');
           const lista = (t === 'PM' ? resp.asesoresPM : resp.asesoresAM).map(x => typeof x === 'string' ? x : (x && x.nombre)).filter(Boolean).map(x => String(x).trim());
@@ -1531,8 +1572,8 @@
     suave(el).innerHTML = '<div class="estado"><span class="punto ' + (dentro ? 'ok' : '') + '"></span>' + (dentro ? 'Recibiendo leads' : 'Fuera del turno') + '</div>' +
       '<p class="muy-tenue" style="margin-top:4px">' + (dentro ? 'Turno ' + t + ' hasta las ' + finTurno(t, rutasAbiertas(t, yo().rutas)) : t && rutasAbiertas(t, yo().rutas).length ? 'Turno ' + t + ' abierto hasta las ' + finTurno(t, rutasAbiertas(t, yo().rutas)) : 'Ahora no hay turno abierto. ' + textoHorario()) + '</p>' +
       (!dentro && t ? (rutasPorRegistrar(yo(), t).length > 1
-        ? '<a class="btn btn-lima btn-chico" style="margin-top:10px;width:100%" href="#/inicio">Elegir dónde registrarme</a>'
-        : '<button type="button" class="btn btn-lima btn-chico" style="margin-top:10px;width:100%" data-accion="turno-registrar" data-valor=""' + (registrandoTurno ? ' disabled' : '') + '>' + (registrandoTurno ? 'Registrando…' : 'Registrarme en el turno') + '</button>') : '');
+        ? '<div class="registro-accion">' + relojHtml(true) + '<a class="btn btn-lima btn-chico" href="#/inicio">Elegir dónde registrarme</a></div>'
+        : '<div class="registro-accion">' + relojHtml(true) + '<button type="button" class="btn btn-lima btn-chico" data-accion="turno-registrar" data-valor=""' + (registrandoTurno ? ' disabled' : '') + '>' + (registrandoTurno ? 'Registrando…' : 'Registrarme en el turno') + '</button></div>') : '');
   }
 
   // ======================================================
@@ -1629,7 +1670,7 @@
     return '<section class="turno-cta" aria-labelledby="tCta"><span class="punto ' + (parcial ? 'ok' : 'alerta') + '"></span><div class="texto"><b id="tCta">' +
       (parcial ? '¿También quieres recibir de ' + esc(nombreRutas(faltan)) + '?' : 'No estás recibiendo leads') + '</b>' +
       '<p>' + (parcial ? 'Ya estás recibiendo leads de ' + esc(nombreRutas(u.registros.filter(x => x.turno === t).map(x => x.ruta))) + '. Si quieres, regístrate también aquí. ' : '') + 'El turno ' + t + ' está abierto hasta las ' + finTurno(t, faltan) + ' (hora de Caracas). ' + (parcial ? '' : faltan.length > 1 ? 'Elige dónde quieres recibir leads: en una ruta o en todas.' : 'Regístrate para entrar en la lista de reparto' + (u.rutas.length > 1 ? ' de ' + esc(RUTAS[faltan[0]]) : '') + '.') + '</p></div>' +
-      botonesRegistro(faltan) + '</section>';
+      '<div class="registro-accion">' + relojHtml() + botonesRegistro(faltan) + '</div></section>';
   }
   function turnoHtml() {
     const u = yo();
@@ -1666,11 +1707,13 @@
       : registrandoTurno ? '<button type="button" class="btn btn-lima registrando" disabled>Registrando en la hoja…</button>'
       : dentro ? '<button type="button" class="btn btn-sec" data-accion="turno">Salir del turno</button>'
       : botonesRegistro(rutasPorRegistrar(u, t));
+    // Hora exacta (con segundos) en que quedó registrada en cada ruta de este turno; la pone Supabase al guardar.
+    const horasRegistro = t ? u.registros.filter(r => r.turno === t && r.creado_en).map(r =>
+      '<div class="hora-registro">Te registraste en ' + esc(RUTAS[r.ruta]) + ' a las <b>' + fmtHoraSeg(Date.parse(r.creado_en)) + '</b></div>').join('') : '';
     return '<section class="bloque turno" aria-labelledby="tTurno"><h2 id="tTurno">Tu turno' + (t ? ' ' + t : '') + '</h2>' +
-      '<div class="reloj num" id="reloj">' + fmtHora(Date.now()) + '</div>' +
       '<div class="estado-turno"><span class="punto ' + (dentro && fuera.length < registradas.length ? 'ok' : dentro ? 'alerta' : '') + '"></span>' + (!dentro ? 'No estás recibiendo leads' : fuera.length >= registradas.length ? 'Fuera de la lista de reparto' : 'Estás en la lista de reparto') + '</div>' +
       '<div class="rutas-turno">' + u.rutas.map(r => '<span class="ruta-chip">' + RUTAS[r] + (registradas.includes(r) ? ' ✓' : '') + '</span>').join('') + '</div>' +
-      puestos + avisosHoja + cupos + boton +
+      horasRegistro + puestos + avisosHoja + cupos + '<div class="registro-accion">' + relojHtml() + boton + '</div>' +
       '<p class="ayuda">' + (t ? 'Primero te anota la hoja de reparto de cada ruta; solo entonces te pones en verde aquí.' : textoHorario()) + '</p></section>';
   }
   function resumenEquipoHtml() {
@@ -3164,9 +3207,14 @@
     }));
     registrandoTurno = false;
     const bien = res.filter(x => !x.error), mal = res.filter(x => x.error);
-    if (bien.length) avisar('Quedaste en la lista de reparto de ' + nombreRutas(bien.map(x => x.r)) + '.');
+    const horaLocal = ahoraReal();
     mal.forEach(x => avisar(x.error, 'err'));
     await recargarYa();
+    if (bien.length) {
+      // Hora exacta del registro: la que guardó Supabase (si ya llegó), si no la del momento en que respondió la hoja.
+      const reg = yo().registros.find(x => x.turno === t && bien.some(b => b.r === x.ruta) && x.creado_en);
+      avisar('Quedaste en la lista de reparto de ' + nombreRutas(bien.map(x => x.r)) + ' a las ' + fmtHoraSeg(reg ? Date.parse(reg.creado_en) : horaLocal) + '.');
+    }
     consultarMiCupo(); consultarOrdenHoja();
   }
   async function salirDelTurno() {
@@ -3400,7 +3448,12 @@
     $('#lateral').classList.remove('abierto'); $('#veloLateral').classList.remove('abierto');
     repintar(); window.scrollTo(0, 0); $('#vista').focus({ preventScroll: true });
   });
-  setInterval(() => { const r = $('#reloj'); if (r) r.textContent = fmtHora(Date.now()); }, 15000);
+  // Relojes con segundos: se mueven justo al cambiar cada segundo.
+  (function tic() {
+    const txt = fmtHoraSeg(ahoraReal());
+    document.querySelectorAll('[data-reloj]').forEach(el => { if (el.textContent !== txt) el.textContent = txt; });
+    setTimeout(tic, 1000 - (ahoraReal() % 1000) + 15);
+  })();
 
   // ======================================================
   // ACCESO (inicio de sesión) Y ARRANQUE
