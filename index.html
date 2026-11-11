@@ -334,8 +334,11 @@
   .reloj-vivo .hms { font: 700 24px/1 'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums; }
   .reloj-vivo.chico { padding: 5px 9px; }
   .reloj-vivo.chico .hms { font-size: 17px; }
-  .lateral .registro-accion { margin-top: 10px; flex-wrap: nowrap; }
-  .lateral .registro-accion > .btn { min-width: 0; white-space: normal; }
+  /* En el lateral el reloj va al lado del botón si caben; si la columna es angosta, el botón baja entero. */
+  .lateral .registro-accion { margin-top: 10px; gap: 8px; }
+  .lateral .registro-accion > .btn { white-space: normal; flex: 1 1 0; min-width: min-content; padding-inline: 10px; }
+  .lateral .reloj-vivo.chico { padding: 5px 8px; }
+  .lateral .reloj-vivo.chico .hms { font-size: 15px; }
   .hora-registro { font-size: 13px; color: var(--niebla-2); }
   .hora-registro b { font-variant-numeric: tabular-nums; color: var(--niebla); }
   @media (max-width: 560px) {
