@@ -1287,11 +1287,33 @@
 
   // ---- Aviso de lead nuevo (solo a quien lo recibe) ----
   let idsConocidos = null;
+  // Un solo AudioContext para todo el panel. Los navegadores lo dejan "suspendido" hasta que la persona
+  // toca la página: se despierta con el primer toque/tecla, así el sonido de un lead que llega solo sí suena.
+  let ctxAudio = null;
+  function contextoAudio() {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    if (!ctxAudio || ctxAudio.state === 'closed') ctxAudio = new C();
+    if (ctxAudio.state === 'suspended') ctxAudio.resume().catch(() => {});
+    return ctxAudio;
+  }
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { try { contextoAudio(); } catch (e) {} }, { passive: true }));
+  // Seguimiento que vence: dos pitidos cortos (el sonido de siempre).
   function pitido() {
     try {
-      const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
-      const ctx = new C(); [0, .22].forEach(t => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; g.gain.value = .08; o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .15); });
-      setTimeout(() => ctx.close && ctx.close(), 800);
+      const ctx = contextoAudio(); if (!ctx) return;
+      [0, .22].forEach(t => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; g.gain.value = .08; o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .15); });
+    } catch (e) { /* sin sonido */ }
+  }
+  // Lead nuevo (11 nov 2026): "Tres notas", Do-Mi-Sol-Do que sube, con timbre suave (triangular).
+  function sonidoLeadNuevo() {
+    try {
+      const ctx = contextoAudio(); if (!ctx) return;
+      [[523.25, 0], [659.25, .13], [783.99, .26], [1046.5, .39]].forEach(([f, ini], i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + ini, dur = i === 3 ? .7 : .35;
+        o.type = 'triangle'; o.frequency.setValueAtTime(f, t);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(.22, t + .01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + dur + .05);
+      });
     } catch (e) { /* sin sonido */ }
   }
   function avisarLeadsNuevos() {
@@ -1299,7 +1321,7 @@
     if (idsConocidos) {
       const nuevos = mios.filter(l => !idsConocidos.has(l.id));
       if (nuevos.length) {
-        pitido();
+        sonidoLeadNuevo();
         avisar(nuevos.length === 1 ? 'Te llegó un lead nuevo: ' + nuevos[0].cliente + '.' : 'Te llegaron ' + nuevos.length + ' leads nuevos.');
         // En Android, new Notification lanza un error: va dentro de try.
         try { if (window.Notification && Notification.permission === 'granted') new Notification('Turisto · lead nuevo', { body: nuevos.map(l => l.cliente).join(', ') }); } catch (e) {}
