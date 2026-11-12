@@ -1119,8 +1119,11 @@
       let listo = false;
       const limpiar = () => { delete window[nombre]; s.remove(); clearTimeout(reloj); };
       window[nombre] = (r) => { listo = true; limpiar(); resolver(r); };
-      const reloj = setTimeout(() => { if (!listo) { limpiar(); rechazar(new Error('la hoja tardó demasiado en responder')); } }, espera);
-      s.onerror = () => { if (!listo) { limpiar(); rechazar(new Error('no se pudo contactar la hoja de Google')); } };
+      // Dos fallos distintos (12 nov 2026): "tiempo" = la hoja tardó (puede que SÍ haya hecho el cambio);
+      // "conexion" = el navegador no pudo cargar la respuesta de Google (red, VPN, bloqueador, cuentas de Google…).
+      const fallo = (texto, tipo) => { const e = new Error(texto); e.tipoHoja = tipo; return e; };
+      const reloj = setTimeout(() => { if (!listo) { limpiar(); rechazar(fallo('la hoja tardó demasiado en responder', 'tiempo')); } }, espera);
+      s.onerror = () => { if (!listo) { limpiar(); rechazar(fallo('no se pudo contactar la hoja de Google', 'conexion')); } };
       s.src = url + '?' + new URLSearchParams(Object.assign({}, params, { callback: nombre })).toString();
       document.head.appendChild(s);
     });
@@ -1461,6 +1464,22 @@
     return m;
   };
 
+  // Qué decir cuando no se pudo hablar con la hoja de reparto al registrar (a uno mismo o, si es la asignadora, a otro).
+  function textoFalloHoja(ruta, e, otro) {
+    const hoja = 'la hoja de reparto de ' + RUTAS[ruta];
+    if (e && e.tipoHoja === 'tiempo') {
+      return otro
+        ? 'La hoja de ' + RUTAS[ruta] + ' tardó demasiado en responder. Puede que ' + otro + ' sí haya quedado anotado: espera un momento y vuelve a intentarlo (si ya estaba, se confirma).'
+        : 'La hoja de ' + RUTAS[ruta] + ' tardó demasiado en responder. Puede que sí te haya anotado: espera un momento y vuelve a pulsar “Registrarme” (si ya estabas, se pone en verde).';
+    }
+    if (e && e.tipoHoja === 'conexion') {
+      return otro
+        ? 'Tu conexión no llegó a ' + hoja + ': ' + otro + ' no quedó anotado. Prueba con otra conexión (WiFi o datos) o sin VPN, y vuelve a intentarlo.'
+        : 'Tu conexión no logró llegar a ' + hoja + ', así que no quedaste registrado. Prueba con otra conexión (WiFi o datos), apaga la VPN o el bloqueador de anuncios, o pídele a tu líder que te anote desde Turnos y cupos.';
+    }
+    return 'No se pudo contactar ' + hoja + ': ' + mensajeError(e);
+  }
+
   const yo = () => datos.usuarios.find(u => u.id === miId) || { id: miId, nombre: 'Tú', rol, rutas: [], estado: 'activo', registros: [], enTurno: false, turno: null };
   const usuario = (id) => datos.usuarios.find(u => u.id === id) || (() => { const r = datos.reportes.find(x => x.asesorId === id && x.asesorNombre); return { nombre: r ? r.asesorNombre : 'Asesor' }; })();
   const veTodo = () => rol !== 'asesor';
@@ -1509,7 +1528,8 @@
     el.className = 'aviso' + (tipo === 'err' ? ' err' : '');
     el.textContent = texto;
     $('#avisos').appendChild(el);
-    setTimeout(() => el.remove(), tipo === 'err' ? 6000 : 3800);
+    // Los errores largos quedan más tiempo: hay que alcanzar a leerlos (hasta 15 s).
+    setTimeout(() => el.remove(), tipo === 'err' ? Math.min(15000, Math.max(6000, String(texto).length * 70)) : 3800);
   }
 
   // ======================================================
@@ -3228,7 +3248,7 @@
         const { error } = await sb.from('registros_turno').insert({ asesor_id: u.id, fecha: hoyClave(), turno: t, ruta: r }).select();
         if (error && error.code !== '23505') return { r, error: 'Quedaste anotado en la hoja de ' + RUTAS[r] + ', pero el panel no lo guardó: ' + mensajeError(error) };
         return { r };
-      } catch (e) { return { r, error: 'No se pudo contactar la hoja de ' + RUTAS[r] + ': ' + mensajeError(e) }; }
+      } catch (e) { return { r, error: textoFalloHoja(r, e) }; }
     }));
     registrandoTurno = false;
     const bien = res.filter(x => !x.error), mal = res.filter(x => x.error);
@@ -3289,7 +3309,7 @@
             continue;
           }
           res.push({ r });
-        } catch (e) { res.push({ r, error: 'No se pudo contactar la hoja de ' + RUTAS[r] + ': ' + mensajeError(e) }); }
+        } catch (e) { res.push({ r, error: textoFalloHoja(r, e, u.nombre) }); }
       }
       const bien = res.filter(x => !x.error);
       if (bien.length) avisar(u.nombre + ' quedó en el turno ' + t + ' de ' + nombreRutas(bien.map(x => x.r)) + '.');
